@@ -1,15 +1,15 @@
-# HVAC Master Closet Configuration
-# Import this into ESPHome dashboard to compile and upload
+# HVAC Master Closet - Import into ESPHome
+# No copying needed - imports directly from GitHub!
 
 substitutions:
   # Device identification
   devicename: "hvac-mastercloset"
   friendly_name: "HVAC Master Closet"
   
-  # Board configuration - Common for CN105 builds
+  # Board configuration
   board_type: "lolin_s2_mini"
   
-  # UART pins for CN105 - Common for CN105 builds
+  # CN105 pins
   uart_tx_pin: "39"
   uart_rx_pin: "40"
   
@@ -18,7 +18,8 @@ substitutions:
   
   # Update intervals
   climate_update_interval: "1.5s"
-  sensor_update_interval: "60s"
 
-# Include the CN105 HVAC template
-<<: !include ../../templates/hvac/cn105-universal.yaml
+# Import packages from GitHub
+packages:
+  esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
+  cn105: github://brianfeucht/esphome-configs/packages/cn105.yaml

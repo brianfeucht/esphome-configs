@@ -1,10 +1,15 @@
 # ESPHome Configuration Repository
 
+![Validate Configs](https://github.com/brianfeucht/esphome-configs/workflows/Validate%20ESPHome%20Configurations/badge.svg)
+![CI/CD Pipeline](https://github.com/brianfeucht/esphome-configs/workflows/ESPHome%20CI/CD%20Pipeline/badge.svg)
+
 This repository contains all my ESPHome device configurations as importable packages. **No copy/paste required** - import configurations directly from GitHub using ESPHome's `packages` feature.
+
+All configurations are automatically validated through CI/CD to ensure they compile successfully before merging.
 
 ## 🚀 Quick Start
 
-1. **Choose a configuration** from `ready-to-import/`
+1. **Choose a configuration** from `devices/`
 2. **Import directly into ESPHome** - no copying needed!
 3. **Customize substitutions** for your hardware
 4. **Set secrets** in ESPHome dashboard
@@ -31,28 +36,28 @@ packages:
 ## 📁 Repository Structure
 
 ```
-├── ready-to-import/     # Complete device configs ready for ESPHome import
-├── packages/           # Modular packages that can be mixed and matched
-├── devices/           # Legacy device configurations (templates-based)
-├── templates/         # Legacy reusable templates  
-├── components/        # Legacy shared components
-└── docs/             # Documentation
+├── devices/           # Complete device configs ready for ESPHome import
+├── packages/          # Modular packages that can be mixed and matched
+├── docs/             # Documentation and setup guides
+└── .github/          # CI/CD workflows and automation
 ```
 
-## 🎯 Available Packages
+**Simple and clean** - no duplication, clear purpose for each directory.
 
-### Core Packages
-- **`base.yaml`** - Essential ESPHome functionality (WiFi, API, OTA, diagnostics)
-- **`cn105.yaml`** - Mitsubishi heat pump control via CN105 interface
-- **`dual-setpoint.yaml`** - Advanced dual setpoint thermostat (requires cn105)
-- **`dht-sensor.yaml`** - DHT22 temperature/humidity sensor
-- **`relay-switch.yaml`** - Basic relay control with optional button
+## 🎯 Available Configurations
 
-### Ready-to-Import Configurations
-- **`hvac-mastercloset.yaml`** - Basic CN105 heat pump controller
-- **`hvac-livingroom-dual.yaml`** - CN105 with dual setpoint thermostat
-- **`sensor-livingroom.yaml`** - DHT22 environmental sensor
-- **`switch-garage.yaml`** - Basic relay switch with button
+### Ready-to-Import Device Configs
+- **`devices/hvac/hvac-mastercloset.yaml`** - Basic CN105 heat pump controller
+- **`devices/hvac/hvac-livingroom-with-dual-setpoint.yaml`** - CN105 with dual setpoint thermostat
+- **`devices/sensors/sensor-livingroom.yaml`** - DHT22 environmental sensor
+- **`devices/switches/switch-garage.yaml`** - Basic relay switch with button
+
+### Modular Packages
+- **`packages/base.yaml`** - Essential ESPHome functionality (WiFi, API, OTA, diagnostics)
+- **`packages/cn105.yaml`** - Mitsubishi heat pump control via CN105 interface
+- **`packages/dual-setpoint.yaml`** - Advanced dual setpoint thermostat (requires cn105)
+- **`packages/dht-sensor.yaml`** - DHT22 temperature/humidity sensor
+- **`packages/relay-switch.yaml`** - Basic relay control with optional button
 
 ## 🔧 Customization
 
@@ -108,3 +113,21 @@ sensor:
     pin: A0
     name: "${friendly_name} Light Level"
 ```
+
+## 🛠️ Development & CI/CD
+
+This repository includes automated validation to ensure all configurations compile successfully:
+
+- **Automatic Validation**: All device configurations are compiled on every pull request
+- **Multiple Workflows**: Simple validation and comprehensive CI/CD pipeline
+- **Build Artifacts**: Compiled firmware available for download
+- **Documentation Checks**: Markdown links validated automatically
+
+See [`.github/README.md`](.github/README.md) for detailed CI/CD documentation.
+
+## 🤝 Contributing
+
+1. Add your device configuration to the appropriate directory
+2. Update the CI/CD matrix to include your new device
+3. Create a pull request - validation runs automatically
+4. Merge after successful validation

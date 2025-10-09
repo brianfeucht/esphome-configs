@@ -1,6 +1,0 @@
-# Web Server Configuration
-# Provides web interface for device monitoring and control
-
-web_server:
-  port: 80
-  ota: false

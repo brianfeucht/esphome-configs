@@ -1,0 +1,30 @@
+name: Validate ESPHome Configurations
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate Device Configurations
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        yaml_file:
+          - devices/hvac/hvac-livingroom-with-dual-setpoint.yaml
+          - devices/hvac/hvac-mastercloset.yaml
+      fail-fast: false
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Build ESPHome configuration
+      uses: esphome/build-action@v3.1.0
+      with:
+        yaml_file: ${{ matrix.yaml_file }}
+        version: stable

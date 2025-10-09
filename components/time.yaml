@@ -1,6 +1,0 @@
-# Time Synchronization Configuration
-# Provides accurate time for logging and scheduling
-
-time:
-  - platform: homeassistant
-    id: homeassistant_time

@@ -1,60 +1,135 @@
-# Device Configurations
+# Ready-to-Import ESPHome Device Configurations
 
-This directory contains ready-to-use ESPHome device configurations. Each configuration is designed to be imported directly into the ESPHome dashboard.
+This directory contains complete, ready-to-use ESPHome device configurations that can be imported directly into the ESPHome dashboard. **No copy/paste required** - each configuration imports the necessary packages from this GitHub repository automatically.
 
-## Directory Structure
+## 🚀 How to Use
+
+1. **Copy the configuration URL** from GitHub (raw file link)
+2. **Paste into ESPHome dashboard** as a new device  
+3. **Customize substitutions** for your hardware
+4. **Compile and upload**
+
+## 📁 Directory Structure
 
 - `hvac/` - Heat pump and climate control devices
 - `sensors/` - Environmental sensors and monitoring devices  
 - `switches/` - Relay controllers and smart switches
 - `other/` - Other device types
 
-## Usage
+## 📋 Available Configurations
 
-1. **Copy Configuration**: Choose a device config that matches your hardware
-2. **Customize Substitutions**: Update device name, pins, and other hardware-specific settings
-3. **Import to ESPHome**: Import the YAML file into your ESPHome dashboard
-4. **Set Secrets**: Ensure all required secrets are configured in ESPHome
-5. **Compile & Upload**: Build and flash to your device
+### HVAC Controllers
 
-## Device Naming Convention
+#### `hvac/hvac-mastercloset.yaml`
+Basic Mitsubishi CN105 heat pump controller
+- **Packages**: base + cn105
+- **Hardware**: Lolin S2 Mini (configurable)
+- **Features**: Basic heat pump control, diagnostics
 
-Use descriptive names that indicate:
-- Device type: `hvac-`, `sensor-`, `switch-`
-- Location: `-livingroom`, `-garage`, `-kitchen`
-- Purpose: `-mastercloset`, `-dual` (for special variants)
+#### `hvac/hvac-livingroom-with-dual-setpoint.yaml`  
+Advanced CN105 with dual setpoint thermostat
+- **Packages**: base + cn105 + dual-setpoint
+- **Hardware**: Lolin S2 Mini (configurable)
+- **Features**: Dual setpoint control, presets, advanced scheduling
 
-Examples:
-- `hvac-livingroom.yaml`
-- `sensor-kitchen.yaml` 
-- `switch-garage.yaml`
+### Sensor Nodes
 
-## Customization
+#### `sensors/sensor-livingroom.yaml`
+DHT22 temperature and humidity sensor
+- **Packages**: base + dht-sensor
+- **Hardware**: Any ESP32/ESP8266
+- **Features**: Temperature, humidity, diagnostics
 
-Each device config uses substitutions for easy customization:
+### Switch Controllers
+
+#### `switches/switch-garage.yaml`
+Basic relay switch with physical button
+- **Packages**: base + relay-switch
+- **Hardware**: Any ESP32/ESP8266
+- **Features**: Relay control, button toggle, diagnostics
+
+## ⚙️ Customization
+
+Each configuration uses substitutions for easy customization:
 
 ```yaml
 substitutions:
-  devicename: "unique-device-name"    # Must be unique across all devices
-  friendly_name: "Display Name"      # Shown in Home Assistant
-  board_type: "esp32dev"             # Your ESP32/ESP8266 board
-  # ... hardware-specific pins and settings
+  # Device identity (must be unique)
+  devicename: "your-device-name"
+  friendly_name: "Your Device Name"
+  
+  # Hardware configuration
+  board_type: "esp32dev"        # Your ESP board
+  status_led_pin: "2"           # Status LED pin
+  
+  # Device-specific pins and settings
+  # ... see individual configs for options
 ```
 
-## Testing
+## 🔧 Creating Custom Configurations
 
-Before deploying to production:
-1. Validate configuration: Check for syntax errors
-2. Test compilation: Ensure it builds successfully
-3. Test upload: Flash to test device first
-4. Verify functionality: Test all features work as expected
+You can also create your own configurations by mixing packages:
 
-## Templates Used
+```yaml
+# Custom configuration example
+substitutions:
+  devicename: "my-custom-device"
+  friendly_name: "My Custom Device"
+  board_type: "esp32dev"
+  # ... other substitutions
 
-Device configurations reference templates from `../templates/`:
-- `common/base.yaml` - Core ESPHome functionality
-- `hvac/cn105-universal.yaml` - Mitsubishi heat pump control
-- `sensors/environmental.yaml` - Temperature/humidity sensors
-- And more...
+packages:
+  esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
+  dht_sensor: github://brianfeucht/esphome-configs/packages/dht-sensor.yaml
+  # Add more packages as needed
 
-Modify template references if you move configurations to different locations.
+# Add custom components here
+sensor:
+  - platform: adc
+    pin: A0
+    name: "${friendly_name} Custom Sensor"
+```
+
+## 📦 Package Dependencies
+
+Some packages require others to be imported first:
+
+- **`dual-setpoint.yaml`** requires **`cn105.yaml`**
+- All configurations should include **`base.yaml`**
+
+The device configs handle these dependencies automatically.
+
+## 🔑 Required Secrets
+
+Make sure these are configured in your ESPHome secrets before compiling:
+
+```yaml
+wifi_ssid: "YourWiFiNetwork"
+wifi_password: "YourWiFiPassword"
+api_encryption_key: "32-character-encryption-key"
+ota_password: "your-ota-password"
+ap_password: "fallback-hotspot-password"
+```
+
+## 🐛 Troubleshooting
+
+### Import Issues
+- Ensure GitHub repository is public
+- Check internet connection during compilation
+- Verify file paths in package imports
+
+### Compilation Errors
+- Check substitution values match your hardware
+- Verify all required secrets are configured
+- Review pin assignments for conflicts
+
+### Hardware Issues
+- Verify pin assignments match your board
+- Check power supply and connections
+- Test with minimal configuration first
+
+## 📖 More Information
+
+- See `../packages/README.md` for details on available packages
+- See `../docs/` for setup guides and advanced configuration
+- Check individual config files for device-specific options
