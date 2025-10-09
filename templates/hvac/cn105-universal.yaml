@@ -1,0 +1,63 @@
+# Universal CN105 Configuration Template
+# Provides Mitsubishi CN105 functionality on top of base ESPHome template
+
+# Include common base functionality
+<<: !include ../common/base.yaml
+
+# CN105-specific substitutions (override in device config if needed)
+substitutions:  
+  # Board configuration - Common for all CN105 builds
+  board_type: "lolin_s2_mini"
+  
+  # UART pins - Common for all CN105 builds  
+  uart_tx_pin: "39"
+  uart_rx_pin: "40"
+  
+  # Status LED - Common for all CN105 builds
+  status_led_pin: "15"
+  
+  # Update intervals
+  climate_update_interval: "1.5s"
+  sensor_update_interval: "60s"
+
+# CN105-specific external component and UART configuration
+external_components:
+  - source: github://echavet/MitsubishiCN105ESPHome
+
+uart:
+  id: HP_UART
+  baud_rate: 2400
+  tx_pin: ${uart_tx_pin}
+  rx_pin: ${uart_rx_pin}
+
+# CN105-specific logging configuration
+logger:
+  level: INFO
+  logs:
+    CYCLE: WARN
+
+# Climate configuration - CN105 heat pump
+climate:
+  - platform: cn105
+    id: hp
+    name: "${friendly_name}"
+    update_interval: ${climate_update_interval}
+    fahrenheit_compatibility: true
+    vertical_vane_select:
+      name: "${friendly_name} Vertical Vane"
+      disabled_by_default: false
+    horizontal_vane_select:
+      name: "${friendly_name} Horizontal Vane"
+      disabled_by_default: false
+    stage_sensor:
+      name: "${friendly_name} Stage"
+      entity_category: diagnostic
+      disabled_by_default: false
+    sub_mode_sensor:
+      name: "${friendly_name} Sub Mode"
+      entity_category: diagnostic
+      disabled_by_default: false
+    auto_sub_mode_sensor:
+      name: "${friendly_name} Auto Sub Mode"
+      entity_category: diagnostic
+      disabled_by_default: false

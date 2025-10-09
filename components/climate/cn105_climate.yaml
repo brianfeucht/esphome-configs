@@ -1,0 +1,33 @@
+# CN105 Climate Device Configuration
+# Main climate control entity for the Mitsubishi heat pump
+
+- platform: cn105
+  id: hp
+  name: "${friendly_name} Heat Pump"
+  update_interval: 1.5s
+  fahrenheit_compatibility: true
+  
+  # Remote temperature sensor (from Home Assistant)
+  remote_temperature_sensor: ${remote_temp_sensor}
+  
+  # Vane controls
+  vertical_vane_select:
+    name: Vertical Vane
+    disabled_by_default: false
+  horizontal_vane_select:
+    name: Horizontal Vane
+    disabled_by_default: false
+    
+  # Diagnostic sensors
+  stage_sensor:
+    name: Stage
+    entity_category: diagnostic
+    disabled_by_default: false
+  sub_mode_sensor:
+    name: Sub Mode
+    entity_category: diagnostic
+    disabled_by_default: false
+  auto_sub_mode_sensor:
+    name: Auto Sub Mode
+    entity_category: diagnostic
+    disabled_by_default: false

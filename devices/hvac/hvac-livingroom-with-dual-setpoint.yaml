@@ -1,0 +1,31 @@
+# HVAC Living Room with Dual Setpoint Configuration
+# Import this into ESPHome dashboard to compile and upload
+
+substitutions:
+  # Device identification
+  devicename: "hvac-livingroom-dual"
+  friendly_name: "HVAC Living Room Dual"
+  
+  # Board configuration - Common for CN105 builds
+  board_type: "lolin_s2_mini"
+  
+  # UART pins for CN105 - Common for CN105 builds
+  uart_tx_pin: "39"
+  uart_rx_pin: "40"
+  
+  # Status LED
+  status_led_pin: "15"
+  
+  # Update intervals
+  climate_update_interval: "1.5s"
+  sensor_update_interval: "60s"
+  
+  # Remote sensor settings for dual setpoint
+  remote_temp_sensor: "sensor.your_external_temp_sensor"
+  remote_humid_sensor: "sensor.your_external_humidity_sensor"
+
+# Include the CN105 HVAC template first (provides basic functionality)
+<<: !include ../../templates/hvac/cn105-universal.yaml
+
+# Then add dual setpoint functionality on top
+<<: !include ../../templates/hvac/dual-setpoint-addon.yaml

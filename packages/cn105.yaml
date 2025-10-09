@@ -1,0 +1,46 @@
+# CN105 Mitsubishi Heat Pump Package
+# Import with: packages:
+#   cn105: github://brianfeucht/esphome-configs/packages/cn105.yaml
+
+# External component for CN105
+external_components:
+  - source: github://echavet/MitsubishiCN105ESPHome
+
+# UART configuration for CN105
+uart:
+  id: HP_UART
+  baud_rate: 2400
+  tx_pin: ${uart_tx_pin}
+  rx_pin: ${uart_rx_pin}
+
+# CN105-specific logging
+logger:
+  level: INFO
+  logs:
+    CYCLE: WARN
+
+# Climate configuration - CN105 heat pump
+climate:
+  - platform: cn105
+    id: hp
+    name: "${friendly_name}"
+    update_interval: ${climate_update_interval}
+    fahrenheit_compatibility: true
+    vertical_vane_select:
+      name: "${friendly_name} Vertical Vane"
+      disabled_by_default: false
+    horizontal_vane_select:
+      name: "${friendly_name} Horizontal Vane"
+      disabled_by_default: false
+    stage_sensor:
+      name: "${friendly_name} Stage"
+      entity_category: diagnostic
+      disabled_by_default: false
+    sub_mode_sensor:
+      name: "${friendly_name} Sub Mode"
+      entity_category: diagnostic
+      disabled_by_default: false
+    auto_sub_mode_sensor:
+      name: "${friendly_name} Auto Sub Mode"
+      entity_category: diagnostic
+      disabled_by_default: false

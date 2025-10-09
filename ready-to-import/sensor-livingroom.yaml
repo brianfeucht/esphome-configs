@@ -1,0 +1,24 @@
+# Living Room Sensor - Import into ESPHome
+# No copying needed - imports directly from GitHub!
+
+substitutions:
+  # Device identification
+  devicename: "sensor-livingroom"
+  friendly_name: "Living Room Sensor"
+  
+  # Board configuration
+  board_type: "esp32dev"
+  
+  # Sensor pin
+  sensor_pin: "4"
+  
+  # Status LED
+  status_led_pin: "2"
+  
+  # Update interval
+  sensor_update_interval: "60s"
+
+# Import packages from GitHub
+packages:
+  esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
+  dht_sensor: github://brianfeucht/esphome-configs/packages/dht-sensor.yaml

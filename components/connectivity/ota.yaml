@@ -1,0 +1,6 @@
+# Over-the-Air Update Configuration
+# Provides secure OTA updates for the device
+
+ota:
+  - platform: esphome
+    password: !secret ota_password

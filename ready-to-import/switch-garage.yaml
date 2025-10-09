@@ -1,0 +1,22 @@
+# Garage Switch - Import into ESPHome
+# No copying needed - imports directly from GitHub!
+
+substitutions:
+  # Device identification
+  devicename: "switch-garage"
+  friendly_name: "Garage Switch"
+  
+  # Board configuration
+  board_type: "esp32dev"
+  
+  # Relay and button pins
+  relay_pin: "12"
+  button_pin: "0"
+  
+  # Status LED
+  status_led_pin: "2"
+
+# Import packages from GitHub
+packages:
+  esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
+  relay_switch: github://brianfeucht/esphome-configs/packages/relay-switch.yaml

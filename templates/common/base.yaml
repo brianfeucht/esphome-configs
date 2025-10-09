@@ -1,0 +1,83 @@
+# Base ESPHome Configuration Template
+# Include this in all device configurations for common functionality
+
+# Core ESPHome configuration
+esphome:
+  name: ${devicename}
+  friendly_name: ${friendly_name}
+
+# Default ESP32 configuration (override board_type in substitutions)
+esp32:
+  board: ${board_type}
+  framework:
+    type: esp-idf
+
+# Enable logging
+logger:
+  level: INFO
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+# Enable OTA updates
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# WiFi configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  
+  # Enable fallback hotspot
+  ap:
+    ssid: "${friendly_name} Fallback"
+    password: !secret ap_password
+
+# Captive portal for WiFi setup
+captive_portal:
+
+# Web server for device management
+web_server:
+  port: 80
+  ota: false
+
+# Status LED (if available)
+status_led:
+  pin: ${status_led_pin}
+
+# Time synchronization with Home Assistant
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+# Basic diagnostic sensors
+sensor:
+  - platform: uptime
+    name: "${friendly_name} Uptime"
+    update_interval: 60s
+    entity_category: diagnostic
+
+  - platform: wifi_signal
+    name: "${friendly_name} WiFi Signal"
+    update_interval: 60s
+    entity_category: diagnostic
+
+# Basic diagnostic text sensors
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "${friendly_name} IP Address"
+      entity_category: diagnostic
+    ssid:
+      name: "${friendly_name} Connected SSID" 
+      entity_category: diagnostic
+    mac_address:
+      name: "${friendly_name} MAC Address"
+      entity_category: diagnostic
+  
+  - platform: version
+    name: "${friendly_name} ESPHome Version"
+    entity_category: diagnostic

@@ -1,0 +1,11 @@
+# Motion/PIR Sensor Template
+# Adds motion detection capability
+
+binary_sensor:
+  - platform: gpio
+    pin: ${motion_sensor_pin}
+    name: "${friendly_name} Motion"
+    device_class: motion
+    filters:
+      - delayed_on: ${motion_on_delay}
+      - delayed_off: ${motion_off_delay}
