@@ -16,7 +16,7 @@ jobs:
       matrix:
         include:
           - name: "HVAC Local Test"
-            yaml_file: test-configs/hvac-local.yaml
+            yaml-file: test-configs/hvac-local.yaml
       fail-fast: false
     
     steps:
@@ -26,4 +26,4 @@ jobs:
       - name: Build & Validate ${{ matrix.name }}
         uses: esphome/build-action@v7.1.0
         with:
-          yaml-file: ${{ matrix.yaml_file }}
+          yaml-file: ${{ matrix.yaml-file }}
