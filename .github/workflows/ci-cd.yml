@@ -15,8 +15,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: "HVAC Living Room Dual Setpoint"
-            yaml_file: devices/hvac/hvac-livingroom-with-dual-setpoint.yaml
+          - name: "HVAC Living Room"
+            yaml_file: devices/hvac/hvac-livingroom.yaml
           - name: "HVAC Master Closet"
             yaml_file: devices/hvac/hvac-mastercloset.yaml
       fail-fast: false
