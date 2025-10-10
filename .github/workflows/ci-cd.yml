@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: "HVAC Living Room"
+          - name: "HVAC Local Test"
             yaml_file: test-configs/hvac-local.yaml
       fail-fast: false
     
