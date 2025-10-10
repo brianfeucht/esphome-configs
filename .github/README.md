@@ -2,27 +2,14 @@
 
 This directory contains GitHub Actions workflows that automatically validate ESPHome configurations using ESPHome's official build action.
 
-## Workflows
+## Workflow
 
-### 1. `validate-configs.yml` - Simple Validation
-A basic workflow that builds all device configurations to ensure they compile successfully.
+### `ci-cd.yml` - ESPHome CI/CD Build & Validate
+A consolidated workflow that builds all device configurations to ensure they compile successfully.
 
 **Triggers:**
 - Push to `main` branch
 - Pull requests to `main` branch  
-- Manual dispatch
-
-**What it does:**
-- Uses ESPHome's official `esphome/build-action` to validate and compile configurations
-- Tests each device configuration with the stable ESPHome version
-- Reports success/failure status
-
-### 2. `ci-cd.yml` - Enhanced Build Pipeline  
-An enhanced version with descriptive names and organized matrix.
-
-**Triggers:**
-- Push to `main` branch
-- Pull requests to `main` branch
 - Manual dispatch
 
 **Features:**
@@ -30,31 +17,31 @@ An enhanced version with descriptive names and organized matrix.
 - **Parallel Builds**: Compiles all device configs simultaneously  
 - **Descriptive Names**: Clear job names for each device type
 - **Stable Version**: Always uses the latest stable ESPHome release
+- **GitHub Package Support**: Validates configurations that import packages from GitHub
 
 ## Device Configuration Matrix
 
-The workflows automatically test these device configurations:
+The workflow automatically tests these device configurations:
 
 | Device Type | Configuration File | Description |
 |-------------|-------------------|-------------|
 | HVAC | `devices/hvac/hvac-livingroom-with-dual-setpoint.yaml` | Living room HVAC with dual setpoint control |
 | HVAC | `devices/hvac/hvac-mastercloset.yaml` | Master closet HVAC unit |
-| Sensor | `devices/sensors/sensor-livingroom.yaml` | Environmental sensor for living room |
-| Switch | `devices/switches/switch-garage.yaml` | Garage door/light switch controller |
 
 ## Adding New Devices
 
-To add a new device to the validation pipeline, update the matrix in both workflow files:
+To add a new device to the validation pipeline, update the matrix in the workflow file:
 
 ```yaml
 strategy:
   matrix:
-    yaml_file:  # or include: for enhanced pipeline
-      - devices/hvac/hvac-livingroom-with-dual-setpoint.yaml
-      - devices/hvac/hvac-mastercloset.yaml  
-      - devices/sensors/sensor-livingroom.yaml
-      - devices/switches/switch-garage.yaml
-      - devices/your-category/your-new-device.yaml  # Add here
+    include:
+      - name: "HVAC Living Room Dual Setpoint"
+        yaml_file: devices/hvac/hvac-livingroom-with-dual-setpoint.yaml
+      - name: "HVAC Master Closet"
+        yaml_file: devices/hvac/hvac-mastercloset.yaml
+      - name: "Your New Device"                    # Add descriptive name
+        yaml_file: devices/category/your-device.yaml  # Add file path
 ```
 
 ## ESPHome Build Action
@@ -69,11 +56,10 @@ We use ESPHome's official GitHub action which provides:
 
 ## Status Badges
 
-Add these to your README to show build status:
+Add this to your README to show build status:
 
 ```markdown
-![Validate Configs](https://github.com/brianfeucht/esphome-configs/workflows/Validate%20ESPHome%20Configurations/badge.svg)
-![ESPHome Build](https://github.com/brianfeucht/esphome-configs/workflows/ESPHome%20Build%20%26%20Validate/badge.svg)
+![ESPHome CI/CD](https://github.com/brianfeucht/esphome-configs/workflows/ESPHome%20CI%2FCD%20-%20Build%20%26%20Validate/badge.svg)
 ```
 
 ## Troubleshooting
@@ -81,17 +67,19 @@ Add these to your README to show build status:
 ### Common Issues
 
 1. **Build Failures**: 
-   - Check that all `!include` paths are correct
+   - Check that all package imports are correct (GitHub URLs)
    - Verify substitutions are properly defined
    - Ensure platform compatibility (ESP32 vs ESP8266)
 
 2. **Missing Dependencies**:
-   - Check that all referenced templates exist
+   - Check that all referenced packages exist in the repository
    - Verify component availability in ESPHome version
+   - Ensure packages have correct dependencies (e.g., dual-setpoint requires cn105)
 
 3. **Action Failures**:
    - Check the action logs for specific error messages
    - Ensure YAML syntax is valid
+   - Verify GitHub repository is public for package imports
 
 ### Local Testing
 

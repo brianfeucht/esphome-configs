@@ -1,7 +1,6 @@
 # ESPHome Configuration Repository
 
-![Validate Configs](https://github.com/brianfeucht/esphome-configs/workflows/Validate%20ESPHome%20Configurations/badge.svg)
-![CI/CD Pipeline](https://github.com/brianfeucht/esphome-configs/workflows/ESPHome%20CI/CD%20Pipeline/badge.svg)
+![ESPHome CI/CD](https://github.com/brianfeucht/esphome-configs/workflows/ESPHome%20CI%2FCD%20-%20Build%20%26%20Validate/badge.svg)
 
 This repository contains all my ESPHome device configurations as importable packages. **No copy/paste required** - import configurations directly from GitHub using ESPHome's `packages` feature.
 
@@ -49,15 +48,16 @@ packages:
 ### Ready-to-Import Device Configs
 - **`devices/hvac/hvac-mastercloset.yaml`** - Basic CN105 heat pump controller
 - **`devices/hvac/hvac-livingroom-with-dual-setpoint.yaml`** - CN105 with dual setpoint thermostat
-- **`devices/sensors/sensor-livingroom.yaml`** - DHT22 environmental sensor
-- **`devices/switches/switch-garage.yaml`** - Basic relay switch with button
 
 ### Modular Packages
 - **`packages/base.yaml`** - Essential ESPHome functionality (WiFi, API, OTA, diagnostics)
 - **`packages/cn105.yaml`** - Mitsubishi heat pump control via CN105 interface
 - **`packages/dual-setpoint.yaml`** - Advanced dual setpoint thermostat (requires cn105)
-- **`packages/dht-sensor.yaml`** - DHT22 temperature/humidity sensor
-- **`packages/relay-switch.yaml`** - Basic relay control with optional button
+
+**Coming Soon:**
+- DHT sensor package for temperature/humidity monitoring
+- Relay switch package for basic switch control
+- Additional device configurations
 
 ## 🔧 Customization
 
@@ -94,18 +94,19 @@ ap_password: "fallback-password"
 ## 📋 Example Custom Configuration
 
 ```yaml
-# My custom multi-sensor device
+# My custom HVAC device
 substitutions:
-  devicename: "sensor-bedroom"
-  friendly_name: "Bedroom Sensor"
-  board_type: "esp32dev"
-  sensor_pin: "4"
-  status_led_pin: "2"
-  sensor_update_interval: "60s"
+  devicename: "hvac-bedroom"
+  friendly_name: "Bedroom HVAC"
+  board_type: "lolin_s2_mini"
+  uart_tx_pin: "39"
+  uart_rx_pin: "40"
+  status_led_pin: "15"
+  climate_update_interval: "1.5s"
 
 packages:
   esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
-  dht_sensor: github://brianfeucht/esphome-configs/packages/dht-sensor.yaml
+  cn105: github://brianfeucht/esphome-configs/packages/cn105.yaml
 
 # Add custom sensors or modifications here
 sensor:

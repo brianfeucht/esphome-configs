@@ -16,7 +16,7 @@ This repository contains centralized ESPHome configurations for all my smart hom
 ## Development Guidelines
 - Use YAML best practices for ESPHome configurations
 - Maintain compatibility with Home Assistant
-- Use modular design with templates and includes
+- Use modular design with GitHub package imports (no local includes)
 - Test configurations before deployment
 - Document all custom parameters and options
 - Store secrets in ESPHome dashboard, not in repository
@@ -46,6 +46,7 @@ This repository contains centralized ESPHome configurations for all my smart hom
 - [x] Create Modular Packages - Built reusable packages for common functionality
 - [x] Update Documentation - Updated all README files for new structure
 - [x] Remove Duplicate Directories - Eliminated templates/, components/, ready-to-import/
-- [ ] Install Required Extensions
-- [ ] Test Configuration Import
-- [ ] Set Up CI/CD for Validation
+- [x] Consolidate CI/CD Workflows - Combined duplicate workflows into single ci-cd.yml
+- [ ] Complete Missing Package Files - Add remaining package implementations
+- [ ] Test Configuration Import - Verify GitHub package imports work correctly
+- [ ] Install Required Extensions - Set up development environment

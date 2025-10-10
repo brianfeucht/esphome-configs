@@ -22,6 +22,8 @@ packages:
   dual_setpoint: github://brianfeucht/esphome-configs/packages/dual-setpoint.yaml
 ```
 
+## Coming Soon
+
 ### DHT Temperature/Humidity Sensor
 ```yaml
 packages:
@@ -51,6 +53,8 @@ packages:
   dual_setpoint: github://brianfeucht/esphome-configs/packages/dual-setpoint.yaml
 ```
 
+## Coming Soon
+
 ### Environmental Sensor
 ```yaml
 packages:
@@ -69,7 +73,9 @@ packages:
 
 For ESPHome dashboard direct import:
 
-- **HVAC Master Closet**: `https://raw.githubusercontent.com/brianfeucht/esphome-configs/main/ready-to-import/hvac-mastercloset.yaml`
-- **HVAC Living Room Dual**: `https://raw.githubusercontent.com/brianfeucht/esphome-configs/main/ready-to-import/hvac-livingroom-dual.yaml`
-- **Living Room Sensor**: `https://raw.githubusercontent.com/brianfeucht/esphome-configs/main/ready-to-import/sensor-livingroom.yaml`
-- **Garage Switch**: `https://raw.githubusercontent.com/brianfeucht/esphome-configs/main/ready-to-import/switch-garage.yaml`
+- **HVAC Master Closet**: `https://raw.githubusercontent.com/brianfeucht/esphome-configs/main/devices/hvac/hvac-mastercloset.yaml`
+- **HVAC Living Room Dual**: `https://raw.githubusercontent.com/brianfeucht/esphome-configs/main/devices/hvac/hvac-livingroom-with-dual-setpoint.yaml`
+
+**Coming Soon:**
+- Living Room Sensor configuration
+- Garage Switch configuration

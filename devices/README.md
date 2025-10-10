@@ -12,8 +12,8 @@ This directory contains complete, ready-to-use ESPHome device configurations tha
 ## 📁 Directory Structure
 
 - `hvac/` - Heat pump and climate control devices
-- `sensors/` - Environmental sensors and monitoring devices  
-- `switches/` - Relay controllers and smart switches
+- `sensors/` - Environmental sensors and monitoring devices (coming soon)
+- `switches/` - Relay controllers and smart switches (coming soon)
 - `other/` - Other device types
 
 ## 📋 Available Configurations
@@ -31,22 +31,6 @@ Advanced CN105 with dual setpoint thermostat
 - **Packages**: base + cn105 + dual-setpoint
 - **Hardware**: Lolin S2 Mini (configurable)
 - **Features**: Dual setpoint control, presets, advanced scheduling
-
-### Sensor Nodes
-
-#### `sensors/sensor-livingroom.yaml`
-DHT22 temperature and humidity sensor
-- **Packages**: base + dht-sensor
-- **Hardware**: Any ESP32/ESP8266
-- **Features**: Temperature, humidity, diagnostics
-
-### Switch Controllers
-
-#### `switches/switch-garage.yaml`
-Basic relay switch with physical button
-- **Packages**: base + relay-switch
-- **Hardware**: Any ESP32/ESP8266
-- **Features**: Relay control, button toggle, diagnostics
 
 ## ⚙️ Customization
 

@@ -55,50 +55,22 @@ packages:
 
 **Dependencies:** Requires `cn105.yaml` package
 
-#### `dht-sensor.yaml`
-DHT22 temperature and humidity sensor
-- Temperature sensor with proper device class
-- Humidity sensor with proper device class
-- Configurable update interval
-
-**Import with:**
-```yaml
-packages:
-  dht_sensor: github://brianfeucht/esphome-configs/packages/dht-sensor.yaml
-```
-
-**Required substitutions:**
-- `sensor_pin` - DHT sensor data pin
-- `sensor_update_interval` - How often to read sensor
-
-#### `relay-switch.yaml`
-Basic relay control with optional physical button
-- GPIO switch for relay control
-- Optional button input with toggle action
-- Configurable pins for both relay and button
-
-**Import with:**
-```yaml
-packages:
-  relay_switch: github://brianfeucht/esphome-configs/packages/relay-switch.yaml
-```
-
-**Required substitutions:**
-- `relay_pin` - GPIO pin controlling relay
-- `button_pin` - Physical button input pin
+#### Coming Soon
+- `dht-sensor.yaml` - DHT22 temperature and humidity sensor
+- `relay-switch.yaml` - Basic relay control with optional physical button
 
 ## 🔧 Using Packages
 
 ### Single Package
 ```yaml
 substitutions:
-  devicename: "my-sensor"
-  friendly_name: "My Sensor"
+  devicename: "my-hvac"
+  friendly_name: "My HVAC"
   # ... hardware-specific substitutions
 
 packages:
   esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
-  dht_sensor: github://brianfeucht/esphome-configs/packages/dht-sensor.yaml
+  cn105: github://brianfeucht/esphome-configs/packages/cn105.yaml
 ```
 
 ### Multiple Packages
@@ -121,7 +93,7 @@ substitutions:
 
 packages:
   esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
-  dht_sensor: github://brianfeucht/esphome-configs/packages/dht-sensor.yaml
+  # Add additional packages when available
 
 # Add your custom components
 sensor:

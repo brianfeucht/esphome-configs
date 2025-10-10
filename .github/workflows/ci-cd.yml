@@ -1,4 +1,4 @@
-name: ESPHome Build & Validate
+name: ESPHome CI/CD - Build & Validate
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build ESPHome Configurations
+  validate:
+    name: Build & Validate ESPHome Configurations
     runs-on: ubuntu-latest
     
     strategy:
@@ -22,10 +22,10 @@ jobs:
       fail-fast: false
     
     steps:
-      - name: Checkout source code
+      - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Build ${{ matrix.name }}
+      - name: Build & Validate ${{ matrix.name }}
         uses: esphome/build-action@v3.1.0
         with:
           yaml_file: ${{ matrix.yaml_file }}
