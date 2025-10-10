@@ -21,10 +21,9 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         
       - name: Build & Validate ${{ matrix.name }}
-        uses: esphome/build-action@v3.1.0
+        uses: esphome/build-action@v7.1.0
         with:
-          yaml_file: ${{ matrix.yaml_file }}
-          version: stable
+          yaml-file: ${{ matrix.yaml_file }}
