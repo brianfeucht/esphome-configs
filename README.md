@@ -19,17 +19,13 @@ All configurations are automatically validated through CI/CD to ensure they comp
 ```yaml
 # In your ESPHome device configuration:
 substitutions:
-  devicename: "my-hvac"
-  friendly_name: "My HVAC"
-  board_type: "lolin_s2_mini"
-  uart_tx_pin: "39"
-  uart_rx_pin: "40"
-  status_led_pin: "15"
-  climate_update_interval: "1.5s"
+  devicename: hvac-office
 
 packages:
-  esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
-  cn105: github://brianfeucht/esphome-configs/packages/cn105.yaml
+  esphome-configs:
+    url: https://github.com/brianfeucht/esphome-configs
+    files: [packages/base.yaml, packages/cn105.yaml]
+    ref: main
 ```
 
 ## 📁 Repository Structure
@@ -45,44 +41,11 @@ packages:
 
 ## 🎯 Available Configurations
 
-### Ready-to-Import Device Configs
-- **`devices/hvac/hvac-mastercloset.yaml`** - Basic CN105 heat pump controller
-- **`devices/hvac/hvac-livingroom-with-dual-setpoint.yaml`** - CN105 with dual setpoint thermostat
-
 ### Modular Packages
 - **`packages/base.yaml`** - Essential ESPHome functionality (WiFi, API, OTA, diagnostics)
-- **`packages/cn105.yaml`** - Mitsubishi heat pump control via CN105 interface
-- **`packages/dual-setpoint.yaml`** - Advanced dual setpoint thermostat (requires cn105)
+- **`packages/hvac/cn105.yaml`** - Mitsubishi heat pump control via CN105 interface
+- **`packages/hvac/dual-setpoint.yaml`** - Advanced dual setpoint thermostat (requires cn105)
 
-**Coming Soon:**
-- DHT sensor package for temperature/humidity monitoring
-- Relay switch package for basic switch control
-- Additional device configurations
-
-## 🔧 Customization
-
-All configurations use `substitutions` for hardware-specific settings:
-
-```yaml
-substitutions:
-  devicename: "unique-device-name"    # Must be unique
-  friendly_name: "Display Name"      # Shown in Home Assistant
-  board_type: "esp32dev"             # Your ESP board type
-  # ... other hardware-specific pins
-```
-
-## 🔑 Secrets Management
-
-Configure these secrets in your ESPHome dashboard (never stored in this repo):
-
-```yaml
-# ESPHome secrets.yaml
-wifi_ssid: "YourWiFiName"
-wifi_password: "YourWiFiPassword"  
-api_encryption_key: "32-character-key"
-ota_password: "your-ota-password"
-ap_password: "fallback-password"
-```
 
 ## 🔄 Workflow
 
@@ -96,17 +59,11 @@ ap_password: "fallback-password"
 ```yaml
 # My custom HVAC device
 substitutions:
-  devicename: "hvac-bedroom"
-  friendly_name: "Bedroom HVAC"
-  board_type: "lolin_s2_mini"
-  uart_tx_pin: "39"
-  uart_rx_pin: "40"
-  status_led_pin: "15"
-  climate_update_interval: "1.5s"
+  devicename: "hvac-bedroom"\
 
 packages:
   esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
-  cn105: github://brianfeucht/esphome-configs/packages/cn105.yaml
+  cn105: github://brianfeucht/esphome-configs/packages/hvac/cn105.yaml
 
 # Add custom sensors or modifications here
 sensor:
