@@ -1,27 +1,9 @@
 # Test configuration for HVAC Living Room - Local package imports
 # This is for testing only - uses local files instead of GitHub imports
 
-esphome:
-  name: ${devicename}
-  friendly_name: ${friendly_name}
-
 substitutions:
   # Device identification
   devicename: "hvac-livingroom-dual"
-  friendly_name: "HVAC Living Room Dual"
-  
-  # Board configuration
-  board_type: "lolin_s2_mini"
-  
-  # CN105 pins
-  uart_tx_pin: "39"
-  uart_rx_pin: "40"
-  
-  # Status LED
-  status_led_pin: "15"
-  
-  # Update intervals
-  climate_update_interval: "1.5s"
 
 # Import packages locally for testing
 packages:
