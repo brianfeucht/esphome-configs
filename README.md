@@ -19,7 +19,7 @@ All configurations are automatically validated through CI/CD to ensure they comp
 ```yaml
 # In your ESPHome device configuration:
 substitutions:
-  devicename: hvac-office
+  devicename: "hvac-office"
 
 packages:
   esphome-configs:
@@ -59,7 +59,7 @@ packages:
 ```yaml
 # My custom HVAC device
 substitutions:
-  devicename: "hvac-bedroom"\
+  devicename: "hvac-bedroom"
 
 packages:
   esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
