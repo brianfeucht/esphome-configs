@@ -120,7 +120,7 @@ climate:
         swing_mode: "BOTH"
 
       - name: Sleep
-        default_target_temperature_low: 16.66    # 62°F - cooler for sleep
+        default_target_temperature_low: 17    # 62°F - cooler for sleep
         default_target_temperature_high: 22.22   # 72°F - moderate maximum
         mode: HEAT_COOL
         fan_mode: "AUTO"
