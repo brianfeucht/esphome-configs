@@ -93,9 +93,7 @@ climate:
     min_fan_mode_switching_time: 120s
     startup_delay: true
 
-    #on_boot_restore_from: memory
-    on_boot_restore_from: default_preset
-    default_preset: Home
+    on_boot_restore_from: memory
 
     # =============================================================================
     # COMFORT PRESETS - PRE-CONFIGURED TEMPERATURE SCENARIOS
