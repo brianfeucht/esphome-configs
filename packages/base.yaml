@@ -1,17 +1,13 @@
 # ESPHome Base Package
 # Import with: packages:
 #   esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
+substitutions:
+  friendly_name: ${devicename}
 
 # Core ESPHome configuration
 esphome:
   name: ${devicename}
   friendly_name: ${friendly_name}
-
-# Default ESP32 configuration (override in substitutions if needed)
-esp32:
-  board: ${board_type}
-  framework:
-    type: esp-idf
 
 # Enable logging
 logger:
