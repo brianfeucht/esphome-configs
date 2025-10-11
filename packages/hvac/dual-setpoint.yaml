@@ -315,23 +315,23 @@ climate:
     # Note: COOL and HEAT modes are commented out because the dual setpoint logic
     # in on_state handles these automatically. Uncomment if you want manual mode control.
 
-    #cool_mode:
-    #  then:
-    #    - climate.control: 
-    #        id: hp
-    #        mode: "COOL"
-    #        fan_mode: "AUTO"
-    #        target_temperature: !lambda |-
-    #          return id(meta_climate).target_temperature_high;
+    cool_mode:
+     then:
+       - climate.control:
+           id: hp
+           mode: "COOL"
+           fan_mode: "AUTO"
+           target_temperature: !lambda |-
+             return id(meta_climate).target_temperature_high;
               
-    #heat_mode:
-    #  then:
-    #    - climate.control: 
-    #        id: hp
-    #        mode: "HEAT"
-    #        fan_mode: "AUTO"
-    #        target_temperature: !lambda |-
-    #          return id(meta_climate).target_temperature_low;
+    heat_mode:
+     then:
+       - climate.control:
+           id: hp
+           mode: "HEAT"
+           fan_mode: "AUTO"
+           target_temperature: !lambda |-
+             return id(meta_climate).target_temperature_low;
 
     # =============================================================================
     # ACTIVE MODE HANDLERS
