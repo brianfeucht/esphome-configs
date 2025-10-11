@@ -8,6 +8,9 @@ substitutions:
   # Later you can change these to external Home Assistant sensors
   room_temp_source: "hp"  # Source for room temperature (hp = heat pump internal)
   room_humidity_source: ""  # Optional humidity source (empty = not used)
+  # Hysteresis deadband values - must match the thermostat configuration
+  heat_deadband_value: "1.0"  # Temperature buffer for heating
+  cool_deadband_value: "1.0"  # Temperature buffer for cooling
 
 # Temperature sensor configuration
 sensor:
@@ -74,10 +77,10 @@ climate:
         current_temperature: 0.05
 
     # Hysteresis settings for better control
-    heat_deadband: 1.0
-    heat_overrun: 1.0
-    cool_deadband: 1.0
-    cool_overrun: 1.0
+    heat_deadband: ${heat_deadband_value}
+    heat_overrun: ${heat_deadband_value}
+    cool_deadband: ${cool_deadband_value}
+    cool_overrun: ${cool_deadband_value}
 
     # Timing controls to prevent short cycling
     min_heating_off_time: 180s
@@ -234,9 +237,9 @@ climate:
               return;
             }
             
-            // Hysteresis values to prevent rapid switching (use configured deadbands)
-            float heat_deadband = id(meta_climate).get_traits().get_heat_deadband();
-            float cool_deadband = id(meta_climate).get_traits().get_cool_deadband();
+            // Hysteresis values to prevent rapid switching (from substitutions)
+            float heat_deadband = ${heat_deadband_value};
+            float cool_deadband = ${cool_deadband_value};
             
             // =================================================================
             // DUAL SETPOINT DECISION LOGIC
