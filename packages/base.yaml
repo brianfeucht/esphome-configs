@@ -19,8 +19,6 @@ logger:
 
 # Enable Home Assistant API
 api:
-  encryption:
-    key: !secret api_encryption_key
 
 # Enable OTA updates
 ota:
@@ -31,14 +29,7 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  
-  # Enable fallback hotspot
-  ap:
-    ssid: "${friendly_name} Fallback"
-    password: !secret ap_password
 
-# Captive portal for WiFi setup
-captive_portal:
 
 # Web server for device management
 web_server:
