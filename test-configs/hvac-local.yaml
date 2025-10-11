@@ -1,6 +1,10 @@
 # Test configuration for HVAC Living Room - Local package imports
 # This is for testing only - uses local files instead of GitHub imports
 
+esphome:
+  name: ${devicename}
+  friendly_name: ${friendly_name}
+
 substitutions:
   # Device identification
   devicename: "hvac-livingroom-dual"
