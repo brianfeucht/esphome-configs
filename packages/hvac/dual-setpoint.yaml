@@ -20,8 +20,8 @@ sensor:
     device_class: temperature
     state_class: measurement
     lambda: |-
-      // Use heat pump's current temperature reading
-      auto current_temp = id(hp).current_temperature;
+      // Use configured temperature source (heat pump internal by default)
+      auto current_temp = id(${room_temp_source}).current_temperature;
       if (isnan(current_temp)) {
         return {};
       }
@@ -218,9 +218,9 @@ climate:
               return;
             }
             
-            // Hysteresis values to prevent rapid switching
-            float heat_deadband = 1.0;    // Temperature buffer for heating
-            float cool_deadband = 1.0;    // Temperature buffer for cooling
+            // Hysteresis values to prevent rapid switching (use configured deadbands)
+            float heat_deadband = id(meta_climate).get_traits().get_heat_deadband();
+            float cool_deadband = id(meta_climate).get_traits().get_cool_deadband();
             
             // =================================================================
             // DUAL SETPOINT DECISION LOGIC
@@ -379,17 +379,6 @@ climate:
             id: hp
             mode: "FAN_ONLY"
             fan_mode: "AUTO"
-
-    # Dry action: Dehumidification mode for high humidity conditions
-    # Target temperature is set to middle of comfort range + 2°C for effective drying
-    dry_action:
-      then:
-        - climate.control: 
-            id: hp
-            mode: "DRY"
-            fan_mode: "AUTO"
-            target_temperature: !lambda |-
-              return ((id(meta_climate).target_temperature_low + id(meta_climate).target_temperature_high) / 2) + 2.0;
 
     # Fan-only action: Air circulation without heating or cooling
     fan_only_action:
