@@ -9,4 +9,4 @@ substitutions:
 packages:
   esphome_base: !include ../packages/base.yaml
   cn105: !include ../packages/hvac/cn105.yaml
-  dual_setpoint: !include ../packages/hvac/dual-setpoint.yaml
+  # dual_setpoint: !include ../packages/hvac/dual-setpoint.yaml
