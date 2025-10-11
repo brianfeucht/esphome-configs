@@ -111,39 +111,23 @@ climate:
     # =============================================================================
 
     preset:
-      # Seasonal presets optimized for specific weather conditions
-      - name: Home in Summer
-        default_target_temperature_low: 21.11    # 70°F - comfortable minimum
-        default_target_temperature_high: 23.33   # 74°F - comfortable maximum
-        mode: COOL                                # Cooling-focused operation
-        fan_mode: "AUTO"                          # Automatic fan speed
-        swing_mode: "BOTH"                        # Full air circulation
-
-      - name: Home in Winter
-        default_target_temperature_low: 22.22    # 72°F - warmer minimum for winter
-        default_target_temperature_high: 25.56   # 78°F - higher maximum for comfort
-        mode: HEAT                                # Heating-focused operation
-        fan_mode: "AUTO"
-        swing_mode: "BOTH"
-
       # General purpose presets for daily use
       - name: Home
-        default_target_temperature_low: 21.11    # 70°F - standard comfort minimum
-        default_target_temperature_high: 23.89   # 75°F - standard comfort maximum
+        default_target_temperature_low: 20.55    # 69°F - standard comfort minimum
+        default_target_temperature_high: 23.33   # 74°F - standard comfort maximum
         mode: HEAT_COOL                           # Dual-mode operation
         fan_mode: "AUTO"
         swing_mode: "BOTH"
 
-      # Sleep and night presets with energy-saving temperatures
       - name: Sleep
-        default_target_temperature_low: 18.33    # 65°F - cooler for sleep
+        default_target_temperature_low: 16.66    # 62°F - cooler for sleep
         default_target_temperature_high: 22.22   # 72°F - moderate maximum
         mode: HEAT_COOL
         fan_mode: "AUTO"
         swing_mode: "BOTH"
 
-      - name: Night
-        default_target_temperature_low: 18.33    # 65°F - energy saving minimum
+      - name: Sierra Sleep
+        default_target_temperature_low: 21.11    # 70°F - energy saving minimum
         default_target_temperature_high: 23.33   # 74°F - moderate maximum
         mode: HEAT_COOL
         fan_mode: "AUTO"
@@ -154,22 +138,6 @@ climate:
         default_target_temperature_low: 18.33    # 65°F - energy saving minimum
         default_target_temperature_high: 25.56   # 78°F - wider range for efficiency
         mode: HEAT_COOL
-        fan_mode: "AUTO"
-        swing_mode: "BOTH"
-
-      # High-performance presets for quick temperature changes
-      - name: Comfort
-        default_target_temperature_low: 22.22    # 72°F - narrow comfort zone
-        default_target_temperature_high: 23.33   # 74°F - precise temperature control
-        mode: HEAT_COOL
-        fan_mode: "HIGH"                          # High fan speed for quick response
-        swing_mode: "BOTH"
-
-      # Fan-only preset for air circulation without heating/cooling
-      - name: Fan Only
-        default_target_temperature_low: 21.11    # 70°F - neutral temperature
-        default_target_temperature_high: 23.33   # 74°F - circulation only
-        mode: FAN_ONLY                            # No heating or cooling
         fan_mode: "AUTO"
         swing_mode: "BOTH"
 
