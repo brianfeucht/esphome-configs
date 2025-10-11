@@ -33,7 +33,6 @@ Set up sensors in your substitutions:
 ```yaml
 substitutions:
   remote_temp_sensor: "sensor.living_room_temperature"
-  remote_humid_sensor: "sensor.living_room_humidity"
 ```
 
 These must be existing entities in Home Assistant.

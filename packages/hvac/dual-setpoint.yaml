@@ -7,7 +7,6 @@ substitutions:
   # Temperature sensors - using heat pump internal temp initially
   # Later you can change these to external Home Assistant sensors
   room_temp_source: "hp"  # Source for room temperature (hp = heat pump internal)
-  room_humidity_source: ""  # Optional humidity source (empty = not used)
   # Hysteresis deadband values - must match the thermostat configuration
   heat_deadband_value: "1.0"  # Temperature buffer for heating
   cool_deadband_value: "1.0"  # Temperature buffer for cooling
@@ -30,19 +29,6 @@ sensor:
       }
       return current_temp;
     update_interval: 10s
-
-  # Optional humidity sensor (placeholder for future external sensor)
-  - platform: template
-    id: room_humidity
-    name: "${friendly_name} Room Humidity"
-    unit_of_measurement: "%"
-    accuracy_decimals: 1
-    device_class: humidity
-    state_class: measurement
-    lambda: |-
-      // Placeholder - return NaN if no humidity source configured
-      return {};
-    update_interval: 60s
 
 # =============================================================================
 # SHARED SCRIPTS FOR REUSABLE ACTIONS
@@ -93,7 +79,8 @@ climate:
     min_fan_mode_switching_time: 120s
     startup_delay: true
 
-    on_boot_restore_from: memory
+    on_boot_restore_from: default_preset
+    default_preset: Away
 
     # =============================================================================
     # COMFORT PRESETS - PRE-CONFIGURED TEMPERATURE SCENARIOS
