@@ -19,6 +19,10 @@ jobs:
             yaml-file: test-configs/hvac-local.yaml
           - name: "Hot Tub Local Test"
             yaml-file: test-configs/hottub-local.yaml
+          - name: "Rat GDO Local Test"
+            yaml-file: test-configs/ratgdo-local.yaml
+          - name: "Machine Room BLE Proxy Test"
+            yaml-file: test-configs/machine-room-ble-proxy.yaml
       fail-fast: false
     
     steps:
