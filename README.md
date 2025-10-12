@@ -35,3 +35,4 @@ packages:
 - **`packages/base.yaml`** - Essential ESPHome functionality (WiFi, API, OTA, diagnostics)
 - **`packages/hvac/cn105.yaml`** - Mitsubishi heat pump control via CN105 interface
 - **`packages/hvac/dual-setpoint.yaml`** - Advanced dual setpoint thermostat (requires cn105)
+- **`packages/hottub/balboa.yaml`** - Balboa Spa control
