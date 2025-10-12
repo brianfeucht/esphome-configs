@@ -1,0 +1,9 @@
+packages:
+  esphome_base: !include ../packages/base.yaml
+  hottub_balboa: !include ../packages/hottub/balboa.yaml
+
+# Override logger for Balboa-specific settings
+logger:
+  level: DEBUG
+  logs:
+    BalboaSpa.CRC: NONE
