@@ -1,0 +1,67 @@
+substitutions:
+  name: ble-proxy-west
+  devicename: ble-proxy-west
+  friendly_name: ble-proxy-west
+  propane_mac: D7:6E:E8:E6:A4:28
+  status_led_pin: GPIO2
+
+esphome:
+  project:
+    name: esphome.bluetooth-proxy
+    version: "1.0"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+dashboard_import:
+  package_import_url: github://esphome/firmware/bluetooth-proxy/esp32-generic.yaml@main
+
+bluetooth_proxy:
+  active: true
+  
+esp32_ble_tracker:
+  scan_parameters:
+     window: 30ms
+     interval: 100ms
+  on_ble_advertise:
+    - mac_address: ${propane_mac}
+      then:
+        - lambda: |-
+            ESP_LOGD("ble_adv", "  name: %s", x.get_name().c_str());
+            std::string name = x.get_name();
+            if (esphome::str_startswith(name, "level:")) {
+              name.erase(0,7);
+              std::string value = esphome::str_until(name.c_str(), ' ');
+              id(propane_level).publish_state(atof(value.c_str()));
+              id(propane_sensor_ok).publish_state(true);
+            }
+            if (esphome::str_startswith(name, "trbl:ACC")) {
+              name.erase(0,10); 
+              std::string value = esphome::str_until(name.c_str(), ')');
+              id(propane_level).publish_state(atof(value.c_str()));
+              id(propane_sensor_ok).publish_state(false);
+            }
+
+sensor:
+# To store the propane level percentage - does nothing on its own.
+  - platform: template
+    name: Propane Level
+    id: propane_level
+    unit_of_measurement: '%'
+# Reports the signal strength auto magically.
+  - platform: ble_rssi
+    mac_address: ${propane_mac}
+    name: "Propane RSSI"
+    id: propane_rssi
+    filters:
+    # Smooth readings as they are very noisy
+    - sliding_window_moving_average:
+        window_size: 15
+        send_every: 15
+
+binary_sensor:
+  - platform: template
+    name: Propane Sensor Ok
+    id: propane_sensor_ok
