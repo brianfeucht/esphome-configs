@@ -52,20 +52,3 @@ sensor:
     name: "${friendly_name} WiFi Signal"
     update_interval: 60s
     entity_category: diagnostic
-
-# Basic diagnostic text sensors
-text_sensor:
-  - platform: wifi_info
-    ip_address:
-      name: "${friendly_name} IP Address"
-      entity_category: diagnostic
-    ssid:
-      name: "${friendly_name} Connected SSID" 
-      entity_category: diagnostic
-    mac_address:
-      name: "${friendly_name} MAC Address"
-      entity_category: diagnostic
-  
-  - platform: version
-    name: "${friendly_name} ESPHome Version"
-    entity_category: diagnostic
