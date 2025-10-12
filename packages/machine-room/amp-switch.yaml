@@ -1,0 +1,13 @@
+substitutions:
+  devicename: machineroom-amp-switch
+  status_led_pin: 15  
+
+esp32:
+  board: lolin_s2_mini
+  framework:
+    type: esp-idf
+
+switch:
+  - platform: gpio
+    pin: GPIO16
+    name: "Machine Room Amplifier Trigger"
