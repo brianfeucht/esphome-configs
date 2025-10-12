@@ -1,4 +1,4 @@
 # Import packages locally for testing
 packages:
   esphome_base: !include ../packages/base.yaml
-  cn105: !include ../packages/machine-room/ble-proxy.yaml
+  ble_proxy: !include ../packages/machine-room/ble-proxy.yaml
