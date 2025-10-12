@@ -1,0 +1,89 @@
+substitutions:
+  devicename: hottub
+  
+  # Status LED pin
+  status_led_pin: "15"
+
+# ESP32 board configuration
+esp32:
+  board: lolin_s2_mini
+  framework:
+    type: arduino
+
+# External component for Balboa Spa integration
+external_components:
+  - source:
+      type: git
+      url: https://github.com/brianfeucht/esphome-balboa-spa
+      ref: main
+
+# UART configuration for Balboa communication
+uart:
+  id: spa_uart_bus
+  tx_pin: GPIO37
+  rx_pin: GPIO39
+  data_bits: 8
+  parity: NONE
+  stop_bits: 1
+  baud_rate: 115200
+  rx_buffer_size: 256
+
+# Balboa Spa component configuration
+balboa_spa:
+  id: hot_tub
+  spa_temp_scale: F
+  esphome_temp_scale: C
+switch:
+  - platform: balboa_spa
+    balboa_spa_id: hot_tub
+    light:
+      name: Lights
+
+fan:
+  - platform: balboa_spa
+    balboa_spa_id: hot_tub
+    jet_1:
+      name: "Jet 1"
+      id: jet1_fan
+    jet_2:
+      name: "Jet 2"
+      id: jet2_fan
+
+climate:
+  - platform: balboa_spa
+    balboa_spa_id: hot_tub
+    name: Thermostat
+    visual:
+      min_temperature: 62 °F    # min: 17
+      max_temperature: 105 °F    # max: 30
+      temperature_step: 1.0 °F  # min: 0.5
+
+binary_sensor:
+  - platform: balboa_spa
+    balboa_spa_id: hot_tub
+    blower:
+      name: Blower
+    highrange:
+      name: High Range
+    circulation:
+      name: Circulation
+    restmode:
+      name: Rest Mode
+    heatstate:
+      name: Heat State
+
+text_sensor:
+  - platform: balboa_spa
+    balboa_spa_id: hot_tub
+    spa_time:
+      name: "Spa Time"
+    filter1_config:
+      name: "Filter 1 Config"
+    filter2_config:
+      name: "Filter 2 Config"
+
+button:
+  - platform: balboa_spa
+    balboa_spa_id: hot_tub
+    sync_time:
+      name: "Sync Spa Time"

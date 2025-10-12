@@ -17,6 +17,8 @@ jobs:
         include:
           - name: "HVAC Local Test"
             yaml-file: test-configs/hvac-local.yaml
+          - name: "Hot Tub Local Test"
+            yaml-file: test-configs/hottub-local.yaml
       fail-fast: false
     
     steps:
