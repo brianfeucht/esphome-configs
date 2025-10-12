@@ -33,6 +33,7 @@ balboa_spa:
   id: hot_tub
   spa_temp_scale: F
   esphome_temp_scale: C
+
 switch:
   - platform: balboa_spa
     balboa_spa_id: hot_tub
