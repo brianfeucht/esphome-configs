@@ -8,7 +8,7 @@ substitutions:
 esp32:
   board: lolin_s2_mini
   framework:
-    type: arduino
+    type: esp-idf
 
 # External component for Balboa Spa integration
 external_components:
