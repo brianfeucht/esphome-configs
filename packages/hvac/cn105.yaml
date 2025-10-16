@@ -56,3 +56,9 @@ climate:
       name: "${friendly_name} Auto Sub Mode"
       entity_category: diagnostic
       disabled_by_default: false
+
+# Restart button
+button:
+  - platform: restart
+    name: "${friendly_name} Restart"
+    entity_category: config
