@@ -10,7 +10,7 @@ substitutions:
 
 # External component for CN105
 external_components:
-  - source: github://brianfeucht/MitsubishiCN105ESPHome@copilot/add-native-dual-setpoint
+  - source: github://brianfeucht/MitsubishiCN105ESPHome@native-heat-cool
     refresh: 1min
 
 # Default ESP32 configuration (override in substitutions if needed)
