@@ -72,6 +72,10 @@ binary_sensor:
       name: Rest Mode
     heatstate:
       name: Heat State
+    filter1_running:
+      name: "Filter 1 Running"
+    filter2_running:
+      name: "Filter 2 Running"
 
 text_sensor:
   - platform: balboa_spa
@@ -82,9 +86,15 @@ text_sensor:
       name: "Filter 1 Config"
     filter2_config:
       name: "Filter 2 Config"
+    fault_message:
+      name: "Fault Message"
+    fault_log_time:
+      name: "Fault Log Time"
 
 button:
   - platform: balboa_spa
     balboa_spa_id: hot_tub
     sync_time:
       name: "Sync Spa Time"
+    request_fault_log:
+      name: "Request Fault Log
