@@ -97,4 +97,4 @@ button:
     sync_time:
       name: "Sync Spa Time"
     request_fault_log:
-      name: "Request Fault Log
+      name: "Request Fault Log"

@@ -37,25 +37,25 @@ climate:
     id: hp
     name: "${friendly_name}"
     update_interval: ${climate_update_interval}
-    fahrenheit_compatibility: true
+    fahrenheit_compatibility: "true"
     vertical_vane_select:
       name: "${friendly_name} Vertical Vane"
-      disabled_by_default: false
+      disabled_by_default: "false"
     horizontal_vane_select:
       name: "${friendly_name} Horizontal Vane"
-      disabled_by_default: false
+      disabled_by_default: "false"
     stage_sensor:
       name: "${friendly_name} Stage"
       entity_category: diagnostic
-      disabled_by_default: false
+      disabled_by_default: "false"
     sub_mode_sensor:
       name: "${friendly_name} Sub Mode"
       entity_category: diagnostic
-      disabled_by_default: false
+      disabled_by_default: "false"
     auto_sub_mode_sensor:
       name: "${friendly_name} Auto Sub Mode"
       entity_category: diagnostic
-      disabled_by_default: false
+      disabled_by_default: "false"
 
 # Restart button
 button:
