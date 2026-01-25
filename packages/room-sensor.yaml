@@ -1,0 +1,51 @@
+
+esp32:
+  board: ${board_type}
+  framework:
+    type: esp-idf
+
+# Configure the hardware UART for the LD2410C
+uart:
+  - id: ld2410_uart
+    tx_pin: GPIO10
+    rx_pin: GPIO9
+    baud_rate: 256000
+
+ld2410:
+
+sensor:
+  - platform: dht
+    pin: GPIO4
+    model: AM2302
+    temperature:
+      name: "Temperature"
+    humidity:
+      name: "Humidity"
+      accuracy_decimals: 1
+    update_interval: 60s
+
+  - platform: ld2410
+    moving_distance:
+      name: "Moving Distance"
+    still_distance:
+      name: "Still Distance"
+    moving_energy:
+      name: "Moving Energy"
+
+binary_sensor:
+  # LD2410 Occupancy Detection
+  - platform: ld2410
+    has_target:
+      name: "Presence Detected"
+    has_moving_target:
+      name: "Moving Target Detected"
+    has_still_target:
+      name: "Still Target Detected"
+  - platform: gpio
+    pin: GPIO18
+    name: "Radar Digital Output"
+    device_class: motion
+
+esp32_ble_tracker:
+
+bluetooth_proxy:
