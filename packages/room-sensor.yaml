@@ -46,6 +46,12 @@ binary_sensor:
     name: "Radar Digital Output"
     device_class: motion
 
+switch:
+  - platform: ld2410
+    bluetooth:
+      name: "LD2410 Bluetooth"
+      restore_mode: ALWAYS_OFF
+
 esp32_ble_tracker:
 
 bluetooth_proxy:
