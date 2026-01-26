@@ -11,6 +11,8 @@ sensor:
   - platform: homeassistant
     name: "${friendly_name} Remote Temperature"
     entity_id: ${remote_temp_sensor}
+    internal: false
+    disabled_by_default: true
     device_class: temperature
     state_class: measurement
     unit_of_measurement: "°C"
