@@ -23,6 +23,8 @@ jobs:
             yaml-file: test-configs/ratgdo-local.yaml
           - name: "Machine Room BLE Proxy Test"
             yaml-file: test-configs/machine-room-ble-proxy.yaml
+          - name: "Room Sensor Test"
+            yaml-file: test-configs/room-sensor.yaml
       fail-fast: false
     
     steps:

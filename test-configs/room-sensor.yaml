@@ -1,0 +1,10 @@
+# Import packages locally for testing
+packages:
+  esphome_base: !include ../packages/base.yaml
+  room_sensor: !include ../packages/room-sensor.yaml
+
+
+substitutions:
+  devicename: test-device
+  board_type: lolin_s3_mini
+  status_led_pin: GPIO47
