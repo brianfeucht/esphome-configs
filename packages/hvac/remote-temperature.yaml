@@ -1,0 +1,29 @@
+# Remote Temperature Sensor Package for CN105 Heat Pumps
+# Import with: packages:
+#   remote_temp: github://brianfeucht/esphome-configs/packages/hvac/remote-temperature.yaml
+#
+# Required substitution:
+#   remote_temp_sensor: "sensor.your_temperature_sensor"  # HomeAssistant sensor entity_id
+
+# Remote temperature sensor from Home Assistant
+# Requires the cn105 package to be loaded (uses 'hp' climate id)
+sensor:
+  - platform: homeassistant
+    name: "${friendly_name} Remote Temperature"
+    entity_id: ${remote_temp_sensor}
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: "°C"
+    filters:
+      - clamp:  # Limits values to range accepted by Mitsubishi units
+          min_value: 1
+          max_value: 40
+          ignore_out_of_range: true
+      - throttle: 30s
+    on_value:
+      then:
+        - logger.log:
+            level: INFO
+            format: "Remote temperature received from HA: %.1f C"
+            args: [ 'x' ]
+        - lambda: 'id(hp).set_remote_temperature(x);'

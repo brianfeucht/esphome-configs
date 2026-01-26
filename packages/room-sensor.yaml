@@ -18,13 +18,15 @@ sensor:
     pin: GPIO4
     model: AM2302
     temperature:
-      name: "Temperature"
+      id: room_temperature
+      name: "${friendly_name} Temperature"
       filters:
         - calibrate_linear:
             - 0 -> 0
             - 100 -> 62.14
     humidity:
-      name: "Humidity"
+      id: room_humidity
+      name: "${friendly_name} Humidity"
       accuracy_decimals: 1
     update_interval: 60s
 

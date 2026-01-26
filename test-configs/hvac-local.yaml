@@ -4,9 +4,12 @@
 substitutions:
   # Device identification
   devicename: "hvac-livingroom-dual"
+  remote_temp_sensor: "sensor.test_room_temperature"
+
 
 # Import packages locally for testing
 packages:
   esphome_base: !include ../packages/base.yaml
   cn105: !include ../packages/hvac/cn105.yaml
+  remote_temp: !include ../packages/hvac/remote-temperature.yaml
   # dual_setpoint: !include ../packages/hvac/dual-setpoint.yaml

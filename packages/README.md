@@ -55,6 +55,26 @@ packages:
 
 **Dependencies:** Requires `cn105.yaml` package
 
+#### `remote-temperature.yaml`
+Home Assistant remote temperature sensor integration
+- Uses external HA sensor instead of heat pump's built-in sensor
+- Temperature validation and filtering
+- Automatic fallback to built-in sensor on timeout
+- Unit conversion support (F to C)
+
+**Import with:**
+```yaml
+packages:
+  remote_temp: github://brianfeucht/esphome-configs/packages/hvac/remote-temperature.yaml
+```
+
+**Required substitutions:**
+- `remote_temp_sensor` - Home Assistant sensor entity_id (e.g., `sensor.room_temperature`)
+
+**Dependencies:** Requires `cn105.yaml` package
+
+See [Remote Temperature Documentation](../docs/remote-temperature.md) for details.
+
 #### Coming Soon
 - `dht-sensor.yaml` - DHT22 temperature and humidity sensor
 - `relay-switch.yaml` - Basic relay control with optional physical button

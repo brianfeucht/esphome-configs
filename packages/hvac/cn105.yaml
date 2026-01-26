@@ -38,6 +38,7 @@ climate:
     name: "${friendly_name}"
     update_interval: ${climate_update_interval}
     fahrenheit_compatibility: "true"
+    remote_temperature_timeout: 10min
     vertical_vane_select:
       name: "${friendly_name} Vertical Vane"
       disabled_by_default: "false"
