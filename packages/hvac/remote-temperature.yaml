@@ -12,10 +12,11 @@ sensor:
     name: "${friendly_name} Remote Temperature"
     entity_id: ${remote_temp_sensor}
     internal: false
-    disabled_by_default: true
+    disabled_by_default: false
     device_class: temperature
     state_class: measurement
     unit_of_measurement: "°C"
+    accuracy_decimals: 1
     filters:
       - clamp:  # Limits values to range accepted by Mitsubishi units
           min_value: 1
