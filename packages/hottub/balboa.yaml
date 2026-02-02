@@ -90,6 +90,8 @@ text_sensor:
       name: "Fault Message"
     fault_log_time:
       name: "Fault Log Time"
+    reminder:
+      name: "Reminder"
 
 button:
   - platform: balboa_spa
