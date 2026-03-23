@@ -34,7 +34,7 @@ balboa_spa:
   spa_temp_scale: F
   esphome_temp_scale: C
 
-switch:
+light:
   - platform: balboa_spa
     balboa_spa_id: hot_tub
     light:
@@ -50,14 +50,14 @@ fan:
       name: "Jet 2"
       id: jet2_fan
 
-climate:
+water_heater:
   - platform: balboa_spa
     balboa_spa_id: hot_tub
     name: Thermostat
     visual:
       min_temperature: 62 °F    # min: 17
       max_temperature: 105 °F    # max: 30
-      temperature_step: 1.0 °F  # min: 0.5
+      target_temperature_step: 1.0  # min: 0.5
 
 binary_sensor:
   - platform: balboa_spa
