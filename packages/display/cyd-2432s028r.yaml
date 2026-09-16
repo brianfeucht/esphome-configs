@@ -52,19 +52,20 @@ light:
     default_transition_length: 250ms
 
 display:
-  - platform: ili9xxx
+  # USB-C versions of this board use an ILI9342 (native 320x240 landscape) rather than the ILI9341 on the
+  # micro-USB version; driving it as an ILI9341 renders sideways and squashed.
+  - platform: mipi_spi
     id: tft
-    model: ILI9341
+    model: ESP32-2432S028-9342
     spi_id: tft_spi
-    cs_pin: GPIO15
-    dc_pin: GPIO2
-    invert_colors: false
-    # Portrait, USB-C at the bottom. If the image is upside down, flip both mirror_x and mirror_y
-    # here and in the touchscreen transform.
+    dimensions:
+      width: 240
+      height: 320
+    # Portrait, USB-C at the bottom. If it's upside down, flip both mirror_x and mirror_y.
     transform:
-      swap_xy: false
+      swap_xy: true
       mirror_x: true
-      mirror_y: false
+      mirror_y: true
     update_interval: never
     auto_clear_enabled: false
 
