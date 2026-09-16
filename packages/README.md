@@ -76,10 +76,10 @@ packages:
 See [Remote Temperature Documentation](../docs/remote-temperature.md) for details.
 
 #### `display/cyd-2432s028r.yaml`
-ESP32-2432S028R "Cheap Yellow Display" (2.8" ILI9341 + XPT2046) hardware
+ESP32-2432S028R "Cheap Yellow Display" USB-C version (2.8" ILI9342 + XPT2046) hardware
 - Portrait 240x320 with the USB-C port at the bottom
 - LVGL display/touch wiring and a dark button theme
-- Backlight light entity; dims after 1 min idle, off after 10 min, wakes on touch
+- Backlight light entity; touch resumes a paused screen at 100% (brightness policy comes from the UI package)
 - Uses the on-board RGB LED (red) as the status LED
 
 **Import with:**
@@ -93,8 +93,8 @@ packages:
 #### `display/west-office-panel.yaml`
 West Office wall panel UI for the CYD
 - Light toggles (overhead, chandelier, key light), both shades as one toggle, HVAC mode cycle (off → heat → cool)
-- Room temperature, HVAC target, CO2 badge, clock
-- Status shown by color; screen wakes on room occupancy
+- Room temperature, HVAC target, CO2 badge (5 air-quality colors), clock
+- Status shown by color; backlight 100% while present (radar occupancy or still-energy), then 30% (bright room) or off (dark room) after 5 min empty
 
 **Import with:**
 ```yaml

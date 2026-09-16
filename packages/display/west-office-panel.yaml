@@ -11,11 +11,21 @@
 #   shades  - amber open (either shade), blue moving, dark closed. Tap closes if open, otherwise opens both.
 #   HVAC    - dark off, dim orange/blue heat/cool idle, bright orange/blue heating/cooling, purple other mode.
 #             Big number = room temperature, thermostat icon + number = target. Tap: off -> heat -> cool -> off.
-#   CO2     - green < 800, amber < 1200, red above.
-# The screen wakes when the room's occupancy sensor turns on.
+#   CO2     - green < 600, light green < 800, yellow < 1000, orange < 1500, red above.
+#
+# Backlight follows the room multisensor:
+#   present                                    - 100%
+#     "Present" = radar zone occupancy on, OR radar still-energy >= still_energy_min. The zone sensor drops out
+#     for several minutes while someone sits still at the desk; still-energy stays high then (empty room: <= 14).
+#   empty longer than vacancy_delay, room bright - 30%
+#   empty longer than vacancy_delay, room dark   - off (LVGL paused)
+#   "Dark" is below dark_lux and "bright" above bright_lux (the gap stops flicker near the threshold).
+#   A touch brightens to 100% for a minute, then the policy above applies again.
+#   Until HA has sent an occupancy state (e.g. right after boot) the panel stays at 100%.
 #
 # Optional substitutions (defaults are the West Office entities):
-#   downlight, chandelier, keylight, shade_left, shade_right, hvac, room_temp, co2, occupancy
+#   downlight, chandelier, keylight, shade_left, shade_right, hvac, room_temp, co2, occupancy, still_energy, room_lux
+#   vacancy_delay, still_energy_min, dark_lux, bright_lux
 
 substitutions:
   downlight: light.west_office_downlight
@@ -27,6 +37,12 @@ substitutions:
   room_temp: sensor.apollo_msr_2_151680_dps310_temperature
   co2: sensor.apollo_msr_2_151680_co2
   occupancy: binary_sensor.west_office_multisensor_radar_zone_occupancy
+  still_energy: sensor.apollo_msr_2_151680_radar_still_energy
+  still_energy_min: "20"
+  room_lux: sensor.apollo_msr_2_151680_ltr390_light
+  vacancy_delay: 5min
+  dark_lux: "10"
+  bright_lux: "20"
 
 interval:
   - interval: 15s
@@ -90,28 +106,94 @@ sensor:
       - lvgl.widget.update:
           id: co2_badge
           bg_color: !lambda |-
-            if (std::isnan(x)) return lv_color_hex(0x3A4252);
-            if (x < 800) return lv_color_hex(0x2E7D4F);
-            if (x < 1200) return lv_color_hex(0xB7791F);
-            return lv_color_hex(0xC0392B);
+            if (std::isnan(x)) return lv_color_hex(0x3A4252);  // no reading: grey
+            if (x < 600) return lv_color_hex(0x2E7D4F);        // excellent: green
+            if (x < 800) return lv_color_hex(0x5E8C2A);        // good: light green
+            if (x < 1000) return lv_color_hex(0xA88A12);       // fair: yellow
+            if (x < 1500) return lv_color_hex(0xC4631B);       // poor: orange
+            return lv_color_hex(0xC0392B);                     // bad: red
+
+  - platform: homeassistant
+    id: ha_still_energy
+    entity_id: ${still_energy}
+
+  # Room light level, used only to decide between dim and off while the room is empty.
+  - platform: homeassistant
+    id: ha_room_lux
+    entity_id: ${room_lux}
+    on_value:
+      - lambda: |-
+          bool dark = id(room_dark);
+          if (x < ${dark_lux}) dark = true;
+          else if (x > ${bright_lux}) dark = false;
+          if (dark != id(room_dark)) {
+            id(room_dark) = dark;
+            id(backlight_policy).execute();
+          }
 
 binary_sensor:
   - platform: homeassistant
-    id: ha_occupied
+    id: ha_radar_occupancy
     entity_id: ${occupancy}
-    on_press:
+
+  # Stays on until the room has looked empty for vacancy_delay. No state until HA has sent occupancy.
+  - platform: template
+    id: ha_occupied
+    lambda: |-
+      if (!id(ha_radar_occupancy).has_state()) return {};
+      float still = id(ha_still_energy).state;
+      return id(ha_radar_occupancy).state || (!std::isnan(still) && still >= ${still_energy_min});
+    filters:
+      - delayed_off: ${vacancy_delay}
+    on_state:
+      - script.execute: backlight_policy
+
+globals:
+  - id: room_dark
+    type: bool
+    initial_value: "false"
+
+# ---------------------------------------------------------------- UI refresh
+
+script:
+  - id: backlight_policy
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: "return !id(ha_occupied).has_state() || id(ha_occupied).state;"
+          then:
+            - script.execute: backlight_resume
+            - light.turn_on:
+                id: backlight
+                brightness: 100%
+          else:
+            - if:
+                condition:
+                  lambda: "return id(room_dark);"
+                then:
+                  - light.turn_off: backlight
+                  - lvgl.pause:
+                else:
+                  - script.execute: backlight_resume
+                  - light.turn_on:
+                      id: backlight
+                      brightness: 30%
+
+  - id: backlight_resume
+    then:
       - if:
           condition: lvgl.is_paused
           then:
             - lvgl.resume:
             - lvgl.widget.redraw:
-      - light.turn_on:
-          id: backlight
-          brightness: 100%
 
-# ---------------------------------------------------------------- UI refresh
+  # Appended to the hardware package's touch wake (which sets 100%): after a minute, re-apply the policy.
+  - id: !extend backlight_touch_wake
+    then:
+      - delay: 1min
+      - script.execute: backlight_policy
 
-script:
   - id: refresh_clock
     then:
       - lvgl.label.update:
@@ -233,20 +315,15 @@ lvgl:
       scrollable: false
       widgets:
         # Layout:
-        #   y   0- 30  header: title, CO2 badge, clock
+        #   y   0- 30  header: CO2 badge (left), clock (right)
         #   y  35-105  three light tiles
         #   y 110-210  shades
         #   y 215-315  HVAC
 
         # -- header
-        - label:
-            x: 8
-            y: 7
-            text: "West Office"
-            text_font: montserrat_16
         - obj:
             id: co2_badge
-            x: 108
+            x: 6
             y: 5
             width: 74
             height: 24

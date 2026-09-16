@@ -1,11 +1,15 @@
 # ESP32-2432S028R "Cheap Yellow Display" hardware package
-# 2.8" ILI9341 240x320 + XPT2046 resistive touch, set up for LVGL in portrait with the USB-C port at the bottom.
+# USB-C version: 2.8" ILI9342 + XPT2046 resistive touch, set up for LVGL in portrait with the USB-C port at the bottom.
 # Import with: packages:
 #   cyd: github://brianfeucht/esphome-configs/packages/display/cyd-2432s028r.yaml
 #
 # Dependencies: base.yaml (import it first; this package overrides its status_led).
 # Provides ids for UI packages: tft, touch, backlight.
-# Screen dims to 30% after 1 min idle and turns off (LVGL paused) after 10 min; a touch wakes it.
+# No idle dimming here: a touch resumes LVGL if paused and runs script `backlight_touch_wake` (default: 100%).
+# UI packages set their own brightness policy and can append steps to the touch behavior with
+#   script:
+#     - id: !extend backlight_touch_wake
+#       then: [...]
 
 substitutions:
   status_led_pin: GPIO4
@@ -100,6 +104,12 @@ touchscreen:
           then:
             - lvgl.resume:
             - lvgl.widget.redraw:
+      - script.execute: backlight_touch_wake
+
+script:
+  - id: backlight_touch_wake
+    mode: restart
+    then:
       - light.turn_on:
           id: backlight
           brightness: 100%
@@ -108,16 +118,6 @@ lvgl:
   displays: [tft]
   touchscreens: [touch]
   buffer_size: 25%
-  on_idle:
-    - timeout: 60s
-      then:
-        - light.turn_on:
-            id: backlight
-            brightness: 30%
-    - timeout: 10min
-      then:
-        - light.turn_off: backlight
-        - lvgl.pause:
 
   # Dark theme. Checkable buttons show "on" as amber; disabled buttons are greyed out.
   theme:
