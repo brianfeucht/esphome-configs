@@ -61,6 +61,8 @@ display:
     dimensions:
       width: 240
       height: 320
+    # The model defaults to BGR, which shows red and blue swapped on this panel (amber renders blue).
+    color_order: RGB
     # Portrait, USB-C at the bottom (verified on hardware).
     transform:
       swap_xy: true
