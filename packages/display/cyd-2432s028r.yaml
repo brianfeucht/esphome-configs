@@ -94,8 +94,10 @@ touchscreen:
       swap_xy: false
       mirror_x: true
       mirror_y: false
+    # Logged at INFO so every touch (real or phantom) shows up in the device log.
     on_touch:
       - logger.log:
+          level: INFO
           format: "touch x=%d y=%d raw x=%d y=%d"
           args: [touch.x, touch.y, touch.x_raw, touch.y_raw]
     on_release:

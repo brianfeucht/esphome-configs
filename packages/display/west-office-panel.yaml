@@ -407,6 +407,10 @@ lvgl:
               - label: { id: lbl_shades_icon, align: LEFT_MID, x: 16, text: "\U000F00AC", text_font: mdi_28 }
               - label: { align: LEFT_MID, x: 60, text: "Shades", text_font: montserrat_16 }
             on_click:
+              - logger.log:
+                  level: INFO
+                  format: "shades tile clicked (left=%s right=%s)"
+                  args: ['id(ha_shade_left).state.c_str()', 'id(ha_shade_right).state.c_str()']
               - if:
                   condition:
                     lambda: |-
