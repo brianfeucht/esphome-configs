@@ -61,7 +61,7 @@ display:
     dimensions:
       width: 240
       height: 320
-    # Portrait, USB-C at the bottom. If it's upside down, flip both mirror_x and mirror_y.
+    # Portrait, USB-C at the bottom (verified on hardware).
     transform:
       swap_xy: true
       mirror_x: true
@@ -83,10 +83,10 @@ touchscreen:
       x_max: 3860
       y_min: 340
       y_max: 3860
-    # If taps land mirrored left/right or top/bottom, flip mirror_x / mirror_y.
+    # Matched to the portrait display transform above (verified on hardware).
     transform:
       swap_xy: false
-      mirror_x: false
+      mirror_x: true
       mirror_y: false
     on_touch:
       - logger.log:
