@@ -14,6 +14,13 @@ esp32:
   board: esp32dev
   framework:
     type: esp-idf
+    advanced:
+      # These boards ship with ESP32-D0WD-V3 rev 3.1; dropping support for older revisions shrinks the binary.
+      # A board with an older chip will refuse to boot this firmware.
+      minimum_chip_revision: "3.1"
+      # +40KB of RAM for code. Needs a bootloader that supports it (recent factory flash does); OTA doesn't
+      # update the bootloader, so a board last flashed by USB with an old ESPHome may need a USB reflash.
+      sram1_as_iram: true
 
 # The on-board RGB LED is active-low; use its red channel as the status LED.
 status_led:
