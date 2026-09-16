@@ -310,7 +310,7 @@ font:
 lvgl:
   pages:
     - id: main_page
-      bg_color: 0x0F131A
+      bg_color: 0x000000
       text_color: 0xE8ECF2
       scrollable: false
       widgets:
@@ -390,7 +390,7 @@ lvgl:
             checkable: true
             widgets:
               - label: { align: TOP_MID, y: 8, text: "\U000F17F4", text_font: mdi_28 }
-              - label: { align: BOTTOM_MID, y: -8, text: "Key Light", text_font: montserrat_12 }
+              - label: { align: BOTTOM_MID, y: -8, text: "Keylight", text_font: montserrat_12 }
             on_click:
               - homeassistant.action:
                   action: light.toggle
