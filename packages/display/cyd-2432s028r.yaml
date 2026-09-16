@@ -1,0 +1,132 @@
+# ESP32-2432S028R "Cheap Yellow Display" hardware package
+# 2.8" ILI9341 240x320 + XPT2046 resistive touch, set up for LVGL in portrait with the USB-C port at the bottom.
+# Import with: packages:
+#   cyd: github://brianfeucht/esphome-configs/packages/display/cyd-2432s028r.yaml
+#
+# Dependencies: base.yaml (import it first; this package overrides its status_led).
+# Provides ids for UI packages: tft, touch, backlight.
+# Screen dims to 30% after 1 min idle and turns off (LVGL paused) after 10 min; a touch wakes it.
+
+substitutions:
+  status_led_pin: GPIO4
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+# The on-board RGB LED is active-low; use its red channel as the status LED.
+status_led:
+  pin:
+    number: GPIO4
+    inverted: true
+
+spi:
+  - id: tft_spi
+    clk_pin: GPIO14
+    mosi_pin: GPIO13
+    miso_pin: GPIO12
+  - id: touch_spi
+    clk_pin: GPIO25
+    mosi_pin: GPIO32
+    miso_pin: GPIO39
+
+output:
+  - platform: ledc
+    id: backlight_pwm
+    pin: GPIO21
+
+light:
+  - platform: monochromatic
+    id: backlight
+    name: "${friendly_name} Backlight"
+    output: backlight_pwm
+    restore_mode: ALWAYS_ON
+    default_transition_length: 250ms
+
+display:
+  - platform: ili9xxx
+    id: tft
+    model: ILI9341
+    spi_id: tft_spi
+    cs_pin: GPIO15
+    dc_pin: GPIO2
+    invert_colors: false
+    # Portrait, USB-C at the bottom. If the image is upside down, flip both mirror_x and mirror_y
+    # here and in the touchscreen transform.
+    transform:
+      swap_xy: false
+      mirror_x: true
+      mirror_y: false
+    update_interval: never
+    auto_clear_enabled: false
+
+touchscreen:
+  - platform: xpt2046
+    id: touch
+    spi_id: touch_spi
+    cs_pin: GPIO33
+    interrupt_pin: GPIO36
+    threshold: 400
+    # Raw XPT2046 range for these boards. If taps land off-target, set `logger: level: DEBUG` in the device
+    # config and tune from the "touch x=.. raw x=.." log lines.
+    calibration:
+      x_min: 280
+      x_max: 3860
+      y_min: 340
+      y_max: 3860
+    # If taps land mirrored left/right or top/bottom, flip mirror_x / mirror_y.
+    transform:
+      swap_xy: false
+      mirror_x: false
+      mirror_y: false
+    on_touch:
+      - logger.log:
+          format: "touch x=%d y=%d raw x=%d y=%d"
+          args: [touch.x, touch.y, touch.x_raw, touch.y_raw]
+    on_release:
+      - if:
+          condition: lvgl.is_paused
+          then:
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+      - light.turn_on:
+          id: backlight
+          brightness: 100%
+
+lvgl:
+  displays: [tft]
+  touchscreens: [touch]
+  buffer_size: 25%
+  on_idle:
+    - timeout: 60s
+      then:
+        - light.turn_on:
+            id: backlight
+            brightness: 30%
+    - timeout: 10min
+      then:
+        - light.turn_off: backlight
+        - lvgl.pause:
+
+  # Dark theme. Checkable buttons show "on" as amber; disabled buttons are greyed out.
+  theme:
+    button:
+      bg_color: 0x252C3A
+      bg_grad_color: 0x252C3A
+      text_color: 0xE8ECF2
+      radius: 10
+      border_width: 0
+      shadow_width: 0
+      pad_all: 0
+      pressed:
+        bg_color: 0x3A465E
+        bg_grad_color: 0x3A465E
+      checked:
+        bg_color: 0xF5B642
+        bg_grad_color: 0xF5B642
+        text_color: 0x151A22
+      disabled:
+        bg_color: 0x1B202A
+        bg_grad_color: 0x1B202A
+        text_color: 0x5B6475

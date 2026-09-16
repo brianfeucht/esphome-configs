@@ -1,0 +1,369 @@
+# West Office wall panel UI (portrait 240x320)
+# Import with: packages:
+#   west_office_panel: github://brianfeucht/esphome-configs/packages/display/west-office-panel.yaml
+#
+# Dependencies: base.yaml, display/cyd-2432s028r.yaml
+# Reads state from Home Assistant and calls HA actions: in HA, the ESPHome integration entry for this device
+# must have "Allow the device to perform Home Assistant actions" turned on.
+#
+# Status is shown by color, not text:
+#   lights  - amber on, dark off, greyed offline. Tap toggles.
+#   shades  - amber open (either shade), blue moving, dark closed. Tap closes if open, otherwise opens both.
+#   HVAC    - dark off, dim orange/blue heat/cool idle, bright orange/blue heating/cooling, purple other mode.
+#             Big number = room temperature, thermostat icon + number = target. Tap: off -> heat -> cool -> off.
+#   CO2     - green < 800, amber < 1200, red above.
+# The screen wakes when the room's occupancy sensor turns on.
+#
+# Optional substitutions (defaults are the West Office entities):
+#   downlight, chandelier, keylight, shade_left, shade_right, hvac, room_temp, co2, occupancy
+
+substitutions:
+  downlight: light.west_office_downlight
+  chandelier: light.west_office_chandelier
+  keylight: light.brian_parkdale
+  shade_left: cover.west_office_left_shade_outbound_bottom
+  shade_right: cover.brian_office_west_shade_right_outbound_bottom
+  hvac: climate.hvac_westoffice_hvac_westoffice
+  room_temp: sensor.apollo_msr_2_151680_dps310_temperature
+  co2: sensor.apollo_msr_2_151680_co2
+  occupancy: binary_sensor.west_office_multisensor_radar_zone_occupancy
+
+interval:
+  - interval: 15s
+    then:
+      - script.execute: refresh_clock
+
+# ---------------------------------------------------------------- Home Assistant state
+
+text_sensor:
+  - platform: homeassistant
+    id: ha_downlight
+    entity_id: ${downlight}
+    on_value: { script.execute: refresh_lights }
+  - platform: homeassistant
+    id: ha_chandelier
+    entity_id: ${chandelier}
+    on_value: { script.execute: refresh_lights }
+  - platform: homeassistant
+    id: ha_keylight
+    entity_id: ${keylight}
+    on_value: { script.execute: refresh_lights }
+
+  - platform: homeassistant
+    id: ha_shade_left
+    entity_id: ${shade_left}
+    on_value: { script.execute: refresh_shades }
+  - platform: homeassistant
+    id: ha_shade_right
+    entity_id: ${shade_right}
+    on_value: { script.execute: refresh_shades }
+
+  - platform: homeassistant
+    id: ha_hvac_mode
+    entity_id: ${hvac}
+    on_value: { script.execute: refresh_hvac }
+  - platform: homeassistant
+    id: ha_hvac_action
+    entity_id: ${hvac}
+    attribute: hvac_action
+    on_value: { script.execute: refresh_hvac }
+
+sensor:
+  - platform: homeassistant
+    id: ha_hvac_target
+    entity_id: ${hvac}
+    attribute: temperature
+    on_value: { script.execute: refresh_hvac }
+  # Current temperature comes from the room multisensor, not the mini-split's return-air reading.
+  - platform: homeassistant
+    id: ha_room_temp
+    entity_id: ${room_temp}
+    on_value: { script.execute: refresh_hvac }
+
+  - platform: homeassistant
+    id: ha_co2
+    entity_id: ${co2}
+    on_value:
+      - lvgl.label.update:
+          id: lbl_co2
+          text: !lambda 'return std::isnan(x) ? std::string("--") : str_sprintf("%.0f", x);'
+      - lvgl.widget.update:
+          id: co2_badge
+          bg_color: !lambda |-
+            if (std::isnan(x)) return lv_color_hex(0x3A4252);
+            if (x < 800) return lv_color_hex(0x2E7D4F);
+            if (x < 1200) return lv_color_hex(0xB7791F);
+            return lv_color_hex(0xC0392B);
+
+binary_sensor:
+  - platform: homeassistant
+    id: ha_occupied
+    entity_id: ${occupancy}
+    on_press:
+      - if:
+          condition: lvgl.is_paused
+          then:
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+      - light.turn_on:
+          id: backlight
+          brightness: 100%
+
+# ---------------------------------------------------------------- UI refresh
+
+script:
+  - id: refresh_clock
+    then:
+      - lvgl.label.update:
+          id: lbl_clock
+          text: !lambda |-
+            auto t = id(homeassistant_time).now();
+            if (!t.is_valid()) return std::string("--:--");
+            int h = t.hour % 12;
+            return str_sprintf("%d:%02d", h == 0 ? 12 : h, t.minute);
+
+  # A light's text sensor is empty until HA connects, then "on" / "off" / "unavailable".
+  - id: refresh_lights
+    then:
+      - lvgl.widget.update:
+          id: btn_downlight
+          state:
+            checked: !lambda 'return id(ha_downlight).state == "on";'
+            disabled: !lambda 'auto s = id(ha_downlight).state; return s != "on" && s != "off";'
+      - lvgl.widget.update:
+          id: btn_chandelier
+          state:
+            checked: !lambda 'return id(ha_chandelier).state == "on";'
+            disabled: !lambda 'auto s = id(ha_chandelier).state; return s != "on" && s != "off";'
+      - lvgl.widget.update:
+          id: btn_keylight
+          state:
+            checked: !lambda 'return id(ha_keylight).state == "on";'
+            disabled: !lambda 'auto s = id(ha_keylight).state; return s != "on" && s != "off";'
+
+  - id: refresh_shades
+    then:
+      - lvgl.widget.update:
+          id: btn_shades
+          bg_color: !lambda |-
+            auto l = id(ha_shade_left).state, r = id(ha_shade_right).state;
+            if (l == "opening" || r == "opening" || l == "closing" || r == "closing") return lv_color_hex(0x4FA3F7);
+            if (l == "open" || r == "open") return lv_color_hex(0xF5B642);
+            return lv_color_hex(0x252C3A);
+          text_color: !lambda |-
+            auto l = id(ha_shade_left).state, r = id(ha_shade_right).state;
+            bool lit = l == "open" || r == "open" || l == "opening" || r == "opening" || l == "closing" || r == "closing";
+            return lv_color_hex(lit ? 0x151A22 : 0xE8ECF2);
+          state:
+            disabled: !lambda |-
+              auto offline = [](const std::string &s) { return s.empty() || s == "unavailable" || s == "unknown"; };
+              return offline(id(ha_shade_left).state) && offline(id(ha_shade_right).state);
+      - lvgl.label.update:
+          id: lbl_shades_icon
+          text: !lambda |-
+            auto l = id(ha_shade_left).state, r = id(ha_shade_right).state;
+            bool open = l == "open" || r == "open" || l == "opening" || r == "opening";
+            return std::string(open ? "\U000F1011" : "\U000F00AC");  // mdi:blinds-open / mdi:blinds
+
+  - id: refresh_hvac
+    then:
+      - lvgl.widget.update:
+          id: btn_hvac
+          bg_color: !lambda |-
+            auto m = id(ha_hvac_mode).state, a = id(ha_hvac_action).state;
+            if (m == "heat") return lv_color_hex(a == "heating" ? 0xF28C38 : 0x5C3A1E);
+            if (m == "cool") return lv_color_hex(a == "cooling" ? 0x4FA3F7 : 0x1F3F5E);
+            if (m == "off") return lv_color_hex(0x252C3A);
+            return lv_color_hex(0x3A3560);
+          text_color: !lambda |-
+            auto a = id(ha_hvac_action).state;
+            return lv_color_hex(a == "heating" || a == "cooling" ? 0x151A22 : 0xE8ECF2);
+          state:
+            disabled: !lambda 'auto m = id(ha_hvac_mode).state; return m.empty() || m == "unavailable" || m == "unknown";'
+      - lvgl.label.update:
+          id: lbl_hvac_icon
+          text: !lambda |-
+            auto m = id(ha_hvac_mode).state;
+            if (m == "heat") return std::string("\U000F0238");  // mdi:fire
+            if (m == "cool") return std::string("\U000F0717");  // mdi:snowflake
+            if (m == "off") return std::string("\U000F0425");   // mdi:power
+            return std::string("\U000F1A79");                   // mdi:sun-snowflake-variant
+      - lvgl.label.update:
+          id: lbl_hvac_current
+          text: !lambda |-
+            float t = id(ha_room_temp).state;
+            return std::isnan(t) ? std::string("--°") : str_sprintf("%.0f°", t);
+      - lvgl.label.update:
+          id: lbl_hvac_target
+          text: !lambda |-
+            float t = id(ha_hvac_target).state;
+            if (std::isnan(t)) return std::string("--°");
+            return str_sprintf(std::fabs(t - std::round(t)) < 0.05f ? "%.0f°" : "%.1f°", t);
+
+# ---------------------------------------------------------------- UI
+
+font:
+  - file: "https://raw.githubusercontent.com/Templarian/MaterialDesign-Webfont/master/fonts/materialdesignicons-webfont.ttf"
+    id: mdi_28
+    size: 28
+    bpp: 4
+    glyphs:
+      - "\U000F0769" # ceiling-light
+      - "\U000F1793" # chandelier
+      - "\U000F17F4" # lightbulb-spot
+      - "\U000F00AC" # blinds
+      - "\U000F1011" # blinds-open
+      - "\U000F0238" # fire
+      - "\U000F0717" # snowflake
+      - "\U000F0425" # power
+      - "\U000F1A79" # sun-snowflake-variant
+  - file: "https://raw.githubusercontent.com/Templarian/MaterialDesign-Webfont/master/fonts/materialdesignicons-webfont.ttf"
+    id: mdi_20
+    size: 20
+    bpp: 4
+    glyphs:
+      - "\U000F07E4" # molecule-co2
+      - "\U000F0393" # thermostat
+
+lvgl:
+  pages:
+    - id: main_page
+      bg_color: 0x0F131A
+      text_color: 0xE8ECF2
+      scrollable: false
+      widgets:
+        # Layout:
+        #   y   0- 30  header: title, CO2 badge, clock
+        #   y  35-105  three light tiles
+        #   y 110-210  shades
+        #   y 215-315  HVAC
+
+        # -- header
+        - label:
+            x: 8
+            y: 7
+            text: "West Office"
+            text_font: montserrat_16
+        - obj:
+            id: co2_badge
+            x: 108
+            y: 5
+            width: 74
+            height: 24
+            radius: 12
+            bg_color: 0x3A4252
+            border_width: 0
+            pad_all: 0
+            scrollable: false
+            widgets:
+              - label:
+                  align: LEFT_MID
+                  x: 4
+                  text: "\U000F07E4"
+                  text_font: mdi_20
+              - label:
+                  id: lbl_co2
+                  align: RIGHT_MID
+                  x: -7
+                  text: "--"
+                  text_font: montserrat_14
+        - label:
+            id: lbl_clock
+            align: TOP_RIGHT
+            x: -6
+            y: 9
+            text: "--:--"
+            text_font: montserrat_14
+
+        # -- lights
+        - button:
+            id: btn_downlight
+            x: 5
+            y: 35
+            width: 73
+            height: 70
+            checkable: true
+            widgets:
+              - label: { align: TOP_MID, y: 8, text: "\U000F0769", text_font: mdi_28 }
+              - label: { align: BOTTOM_MID, y: -8, text: "Overhead", text_font: montserrat_12 }
+            on_click:
+              - homeassistant.action:
+                  action: light.toggle
+                  data: { entity_id: "${downlight}" }
+        - button:
+            id: btn_chandelier
+            x: 83
+            y: 35
+            width: 74
+            height: 70
+            checkable: true
+            widgets:
+              - label: { align: TOP_MID, y: 8, text: "\U000F1793", text_font: mdi_28 }
+              - label: { align: BOTTOM_MID, y: -8, text: "Chandelier", text_font: montserrat_12 }
+            on_click:
+              - homeassistant.action:
+                  action: light.toggle
+                  data: { entity_id: "${chandelier}" }
+        - button:
+            id: btn_keylight
+            x: 162
+            y: 35
+            width: 73
+            height: 70
+            checkable: true
+            widgets:
+              - label: { align: TOP_MID, y: 8, text: "\U000F17F4", text_font: mdi_28 }
+              - label: { align: BOTTOM_MID, y: -8, text: "Key Light", text_font: montserrat_12 }
+            on_click:
+              - homeassistant.action:
+                  action: light.toggle
+                  data: { entity_id: "${keylight}" }
+
+        # -- shades (both as one unit)
+        - button:
+            id: btn_shades
+            x: 5
+            y: 110
+            width: 230
+            height: 100
+            widgets:
+              - label: { id: lbl_shades_icon, align: LEFT_MID, x: 16, text: "\U000F00AC", text_font: mdi_28 }
+              - label: { align: LEFT_MID, x: 60, text: "Shades", text_font: montserrat_16 }
+            on_click:
+              - if:
+                  condition:
+                    lambda: |-
+                      auto l = id(ha_shade_left).state, r = id(ha_shade_right).state;
+                      return l == "open" || r == "open" || l == "opening" || r == "opening";
+                  then:
+                    - homeassistant.action:
+                        action: cover.close_cover
+                        data: { entity_id: "${shade_left},${shade_right}" }
+                  else:
+                    - homeassistant.action:
+                        action: cover.open_cover
+                        data: { entity_id: "${shade_left},${shade_right}" }
+
+        # -- HVAC
+        - button:
+            id: btn_hvac
+            x: 5
+            y: 215
+            width: 230
+            height: 100
+            widgets:
+              - label: { id: lbl_hvac_icon, align: TOP_LEFT, x: 16, y: 14, text: "\U000F0425", text_font: mdi_28 }
+              - label: { align: BOTTOM_LEFT, x: 16, y: -12, text: "HVAC", text_font: montserrat_14 }
+              - label: { id: lbl_hvac_current, align: CENTER, x: 4, text: "--°", text_font: montserrat_28 }
+              - label: { align: TOP_RIGHT, x: -22, y: 16, text: "\U000F0393", text_font: mdi_20 }
+              - label: { id: lbl_hvac_target, align: BOTTOM_RIGHT, x: -16, y: -14, text: "--°", text_font: montserrat_16 }
+            on_click:
+              - homeassistant.action:
+                  action: climate.set_hvac_mode
+                  data:
+                    entity_id: ${hvac}
+                    hvac_mode: !lambda |-
+                      auto m = id(ha_hvac_mode).state;
+                      if (m == "off") return std::string("heat");
+                      if (m == "heat") return std::string("cool");
+                      return std::string("off");

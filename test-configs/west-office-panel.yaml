@@ -1,0 +1,11 @@
+# Test configuration for the West Office CYD wall panel - Local package imports
+# This is for testing only - uses local files instead of GitHub imports
+
+substitutions:
+  devicename: "panel-west-office"
+  friendly_name: "West Office Panel"
+
+packages:
+  esphome_base: !include ../packages/base.yaml
+  cyd: !include ../packages/display/cyd-2432s028r.yaml
+  west_office_panel: !include ../packages/display/west-office-panel.yaml

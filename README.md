@@ -36,3 +36,5 @@ packages:
 - **`packages/hvac/cn105.yaml`** - Mitsubishi heat pump control via CN105 interface
 - **`packages/hvac/dual-setpoint.yaml`** - Advanced dual setpoint thermostat (requires cn105)
 - **`packages/hottub/balboa.yaml`** - Balboa Spa control
+- **`packages/display/cyd-2432s028r.yaml`** - ESP32-2432S028R "Cheap Yellow Display" hardware (portrait LVGL, touch, backlight dimming)
+- **`packages/display/west-office-panel.yaml`** - West Office wall panel UI: lights, shades, HVAC, CO2 (requires cyd-2432s028r)

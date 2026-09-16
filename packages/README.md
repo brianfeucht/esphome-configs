@@ -75,6 +75,37 @@ packages:
 
 See [Remote Temperature Documentation](../docs/remote-temperature.md) for details.
 
+#### `display/cyd-2432s028r.yaml`
+ESP32-2432S028R "Cheap Yellow Display" (2.8" ILI9341 + XPT2046) hardware
+- Portrait 240x320 with the USB-C port at the bottom
+- LVGL display/touch wiring and a dark button theme
+- Backlight light entity; dims after 1 min idle, off after 10 min, wakes on touch
+- Uses the on-board RGB LED (red) as the status LED
+
+**Import with:**
+```yaml
+packages:
+  cyd: github://brianfeucht/esphome-configs/packages/display/cyd-2432s028r.yaml
+```
+
+**Dependencies:** Requires `base.yaml` (import it first). Provides ids `tft`, `touch`, `backlight` for UI packages.
+
+#### `display/west-office-panel.yaml`
+West Office wall panel UI for the CYD
+- Light toggles (overhead, chandelier, key light), both shades as one toggle, HVAC mode cycle (off → heat → cool)
+- Room temperature, HVAC target, CO2 badge, clock
+- Status shown by color; screen wakes on room occupancy
+
+**Import with:**
+```yaml
+packages:
+  west_office_panel: github://brianfeucht/esphome-configs/packages/display/west-office-panel.yaml
+```
+
+**Optional substitutions:** `downlight`, `chandelier`, `keylight`, `shade_left`, `shade_right`, `hvac`, `room_temp`, `co2`, `occupancy` (Home Assistant entity_ids; default to the West Office entities)
+
+**Dependencies:** Requires `base.yaml` and `display/cyd-2432s028r.yaml`. In Home Assistant, enable "Allow the device to perform Home Assistant actions" for the device.
+
 #### Coming Soon
 - `dht-sensor.yaml` - DHT22 temperature and humidity sensor
 - `relay-switch.yaml` - Basic relay control with optional physical button
@@ -146,6 +177,7 @@ substitutions:
 
 Some packages depend on others:
 - **`dual-setpoint.yaml`** requires **`cn105.yaml`**
+- **`display/west-office-panel.yaml`** requires **`display/cyd-2432s028r.yaml`**
 - Most configurations should include **`base.yaml`**
 
 Dependencies are not automatically resolved - you must import all required packages.

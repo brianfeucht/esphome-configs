@@ -25,6 +25,8 @@ jobs:
             yaml-file: test-configs/machine-room-ble-proxy.yaml
           - name: "Room Sensor Test"
             yaml-file: test-configs/room-sensor.yaml
+          - name: "West Office Panel Test"
+            yaml-file: test-configs/west-office-panel.yaml
       fail-fast: false
     
     steps:
