@@ -417,7 +417,7 @@ lvgl:
               - logger.log:
                   level: INFO
                   format: "shades tap held %ums (left=%s right=%s)"
-                  args: ['millis() - id(tap_started_ms)', 'id(ha_shade_left).state.c_str()', 'id(ha_shade_right).state.c_str()']
+                  args: ['(unsigned) (millis() - id(tap_started_ms))', 'id(ha_shade_left).state.c_str()', 'id(ha_shade_right).state.c_str()']
               - if:
                   condition:
                     lambda: "return millis() - id(tap_started_ms) >= ${min_tap_ms};"
@@ -455,7 +455,7 @@ lvgl:
               - logger.log:
                   level: INFO
                   format: "hvac tap held %ums (mode=%s)"
-                  args: ['millis() - id(tap_started_ms)', 'id(ha_hvac_mode).state.c_str()']
+                  args: ['(unsigned) (millis() - id(tap_started_ms))', 'id(ha_hvac_mode).state.c_str()']
               - if:
                   condition:
                     lambda: "return millis() - id(tap_started_ms) >= ${min_tap_ms};"
