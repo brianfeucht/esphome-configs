@@ -40,7 +40,7 @@ substitutions:
   occupancy: binary_sensor.west_office_multisensor_radar_zone_occupancy
   still_energy: sensor.apollo_msr_2_151680_radar_still_energy
   still_energy_min: "20"
-  min_tap_ms: "80"
+  min_tap_ms: "60"
   room_lux: sensor.apollo_msr_2_151680_ltr390_light
   vacancy_delay: 5min
   dark_lux: "10"

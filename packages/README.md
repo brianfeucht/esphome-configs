@@ -92,7 +92,7 @@ packages:
 
 #### `display/west-office-panel.yaml`
 West Office wall panel UI for the CYD
-- Light toggles (overhead, chandelier, keylight), both shades as one toggle, HVAC mode cycle (off → heat → cool); shades and HVAC ignore touches shorter than 80 ms
+- Light toggles (overhead, chandelier, keylight), both shades as one toggle, HVAC mode cycle (off → heat → cool); shades and HVAC ignore touches shorter than 60 ms
 - Room temperature, HVAC target, CO2 badge (5 air-quality colors), clock
 - Status shown by color; backlight 100% while present (radar occupancy or still-energy), then 30% (bright room) or off (dark room) after 5 min empty
 
