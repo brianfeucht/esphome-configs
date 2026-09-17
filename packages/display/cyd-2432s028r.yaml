@@ -80,10 +80,11 @@ touchscreen:
     id: touch
     spi_id: touch_spi
     cs_pin: GPIO33
-    interrupt_pin: GPIO36
+    # Polled instead of using the T_IRQ pin (GPIO36): that input-only pin can't take an internal pull-up, and
+    # noise on it produced phantom touches reading mid-scale (raw ~2050, ~1950 = middle of the screen).
+    update_interval: 50ms
     threshold: 400
-    # Raw XPT2046 range for these boards. If taps land off-target, set `logger: level: DEBUG` in the device
-    # config and tune from the "touch x=.. raw x=.." log lines.
+    # Raw XPT2046 range for these boards. If taps land off-target, tune from the "touch x=.. raw x=.." log lines.
     calibration:
       x_min: 280
       x_max: 3860

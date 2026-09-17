@@ -11,6 +11,7 @@
 #   shades  - amber open (either shade), blue moving, dark closed. Tap closes if open, otherwise opens both.
 #   HVAC    - dark off, dim orange/blue heat/cool idle, bright orange/blue heating/cooling, purple other mode.
 #             Big number = room temperature, thermostat icon + number = target. Tap: off -> heat -> cool -> off.
+#             Shades and HVAC ignore touches shorter than min_tap_ms (phantom touches are single blips).
 #   CO2     - green < 600, light green < 800, yellow < 1000, orange < 1500, red above.
 #
 # Backlight follows the room multisensor:
@@ -25,7 +26,7 @@
 #
 # Optional substitutions (defaults are the West Office entities):
 #   downlight, chandelier, keylight, shade_left, shade_right, hvac, room_temp, co2, occupancy, still_energy, room_lux
-#   vacancy_delay, still_energy_min, dark_lux, bright_lux
+#   vacancy_delay, still_energy_min, dark_lux, bright_lux, min_tap_ms
 
 substitutions:
   downlight: light.west_office_downlight
@@ -39,6 +40,7 @@ substitutions:
   occupancy: binary_sensor.west_office_multisensor_radar_zone_occupancy
   still_energy: sensor.apollo_msr_2_151680_radar_still_energy
   still_energy_min: "20"
+  min_tap_ms: "80"
   room_lux: sensor.apollo_msr_2_151680_ltr390_light
   vacancy_delay: 5min
   dark_lux: "10"
@@ -149,6 +151,9 @@ binary_sensor:
       - script.execute: backlight_policy
 
 globals:
+  - id: tap_started_ms
+    type: uint32_t
+    initial_value: "0"
   - id: room_dark
     type: bool
     initial_value: "false"
@@ -406,24 +411,30 @@ lvgl:
             widgets:
               - label: { id: lbl_shades_icon, align: LEFT_MID, x: 16, text: "\U000F00AC", text_font: mdi_28 }
               - label: { align: LEFT_MID, x: 60, text: "Shades", text_font: montserrat_16 }
+            on_press:
+              - lambda: id(tap_started_ms) = millis();
             on_click:
               - logger.log:
                   level: INFO
-                  format: "shades tile clicked (left=%s right=%s)"
-                  args: ['id(ha_shade_left).state.c_str()', 'id(ha_shade_right).state.c_str()']
+                  format: "shades tap held %ums (left=%s right=%s)"
+                  args: ['millis() - id(tap_started_ms)', 'id(ha_shade_left).state.c_str()', 'id(ha_shade_right).state.c_str()']
               - if:
                   condition:
-                    lambda: |-
-                      auto l = id(ha_shade_left).state, r = id(ha_shade_right).state;
-                      return l == "open" || r == "open" || l == "opening" || r == "opening";
+                    lambda: "return millis() - id(tap_started_ms) >= ${min_tap_ms};"
                   then:
-                    - homeassistant.action:
-                        action: cover.close_cover
-                        data: { entity_id: "${shade_left},${shade_right}" }
-                  else:
-                    - homeassistant.action:
-                        action: cover.open_cover
-                        data: { entity_id: "${shade_left},${shade_right}" }
+                    - if:
+                        condition:
+                          lambda: |-
+                            auto l = id(ha_shade_left).state, r = id(ha_shade_right).state;
+                            return l == "open" || r == "open" || l == "opening" || r == "opening";
+                        then:
+                          - homeassistant.action:
+                              action: cover.close_cover
+                              data: { entity_id: "${shade_left},${shade_right}" }
+                        else:
+                          - homeassistant.action:
+                              action: cover.open_cover
+                              data: { entity_id: "${shade_left},${shade_right}" }
 
         # -- HVAC
         - button:
@@ -438,13 +449,23 @@ lvgl:
               - label: { id: lbl_hvac_current, align: CENTER, x: 4, text: "--°", text_font: montserrat_28 }
               - label: { align: TOP_RIGHT, x: -22, y: 16, text: "\U000F0393", text_font: mdi_20 }
               - label: { id: lbl_hvac_target, align: BOTTOM_RIGHT, x: -16, y: -14, text: "--°", text_font: montserrat_16 }
+            on_press:
+              - lambda: id(tap_started_ms) = millis();
             on_click:
-              - homeassistant.action:
-                  action: climate.set_hvac_mode
-                  data:
-                    entity_id: ${hvac}
-                    hvac_mode: !lambda |-
-                      auto m = id(ha_hvac_mode).state;
-                      if (m == "off") return std::string("heat");
-                      if (m == "heat") return std::string("cool");
-                      return std::string("off");
+              - logger.log:
+                  level: INFO
+                  format: "hvac tap held %ums (mode=%s)"
+                  args: ['millis() - id(tap_started_ms)', 'id(ha_hvac_mode).state.c_str()']
+              - if:
+                  condition:
+                    lambda: "return millis() - id(tap_started_ms) >= ${min_tap_ms};"
+                  then:
+                    - homeassistant.action:
+                        action: climate.set_hvac_mode
+                        data:
+                          entity_id: ${hvac}
+                          hvac_mode: !lambda |-
+                            auto m = id(ha_hvac_mode).state;
+                            if (m == "off") return std::string("heat");
+                            if (m == "heat") return std::string("cool");
+                            return std::string("off");
