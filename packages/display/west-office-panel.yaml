@@ -10,8 +10,10 @@
 #   lights  - amber on, dark off, greyed offline. Tap toggles.
 #   shades  - amber open (either shade), blue moving, dark closed. Tap closes if open, otherwise opens both.
 #   HVAC    - dark off, dim orange/blue heat/cool idle, bright orange/blue heating/cooling, purple other mode.
-#             Big number = room temperature, thermostat icon + number = target. Tap: off -> heat -> cool -> off.
-#             Shades and HVAC ignore touches shorter than min_tap_ms (phantom touches are single blips).
+#             Big number = room temperature, thermostat icon + number = target. Tap opens the HVAC screen:
+#             up/down arrows adjust the target by hvac_step (sent hvac_send_delay after the last tap), Off/Heat/Cool
+#             buttons set the mode, X closes it, and it returns to the main screen after hvac_page_timeout idle.
+#   Shades and the HVAC screen's buttons ignore touches shorter than min_tap_ms (phantom touches are single blips).
 #   CO2     - green < 600, light green < 800, yellow < 1000, orange < 1500, red above.
 #
 # Backlight follows the room multisensor:
@@ -26,7 +28,8 @@
 #
 # Optional substitutions (defaults are the West Office entities):
 #   downlight, chandelier, keylight, shade_left, shade_right, hvac, room_temp, co2, occupancy, still_energy, room_lux
-#   vacancy_delay, still_energy_min, dark_lux, bright_lux, min_tap_ms
+#   vacancy_delay, still_energy_min, dark_lux, bright_lux, min_tap_ms,
+#   hvac_step, hvac_min, hvac_max, hvac_send_delay, hvac_page_timeout
 
 substitutions:
   downlight: light.west_office_downlight
@@ -45,6 +48,11 @@ substitutions:
   vacancy_delay: 5min
   dark_lux: "10"
   bright_lux: "20"
+  hvac_step: "1.0"
+  hvac_min: "61"
+  hvac_max: "79"
+  hvac_send_delay: 1500ms
+  hvac_page_timeout: 15s
 
 interval:
   - interval: 15s
@@ -91,7 +99,15 @@ sensor:
     id: ha_hvac_target
     entity_id: ${hvac}
     attribute: temperature
-    on_value: { script.execute: refresh_hvac }
+    on_value:
+      # Don't overwrite a setpoint that's still being dialed in on the HVAC screen.
+      - if:
+          condition:
+            not:
+              script.is_running: hvac_send_target
+          then:
+            - lambda: id(hvac_target) = x;
+            - script.execute: refresh_hvac
   # Current temperature comes from the room multisensor, not the mini-split's return-air reading.
   - platform: homeassistant
     id: ha_room_temp
@@ -151,6 +167,9 @@ binary_sensor:
       - script.execute: backlight_policy
 
 globals:
+  - id: hvac_target
+    type: float
+    initial_value: "NAN"
   - id: tap_started_ms
     type: uint32_t
     initial_value: "0"
@@ -283,9 +302,71 @@ script:
       - lvgl.label.update:
           id: lbl_hvac_target
           text: !lambda |-
-            float t = id(ha_hvac_target).state;
+            float t = id(hvac_target);
             if (std::isnan(t)) return std::string("--°");
             return str_sprintf(std::fabs(t - std::round(t)) < 0.05f ? "%.0f°" : "%.1f°", t);
+      # HVAC screen
+      - lvgl.label.update:
+          id: lbl_hvac_page_target
+          text: !lambda |-
+            float t = id(hvac_target);
+            if (std::isnan(t)) return std::string("--°");
+            return str_sprintf(std::fabs(t - std::round(t)) < 0.05f ? "%.0f°" : "%.1f°", t);
+      - lvgl.label.update:
+          id: lbl_hvac_page_room
+          text: !lambda |-
+            float t = id(ha_room_temp).state;
+            return std::isnan(t) ? std::string("Room --°") : str_sprintf("Room %.0f°", t);
+      - lvgl.widget.update:
+          id: btn_hvac_mode_off
+          state:
+            checked: !lambda 'return id(ha_hvac_mode).state == "off";'
+      - lvgl.widget.update:
+          id: btn_hvac_mode_heat
+          state:
+            checked: !lambda 'return id(ha_hvac_mode).state == "heat";'
+      - lvgl.widget.update:
+          id: btn_hvac_mode_cool
+          state:
+            checked: !lambda 'return id(ha_hvac_mode).state == "cool";'
+      # Arrows only work when the unit has a single setpoint (not in heat_cool, not offline).
+      - lvgl.widget.update:
+          id: btn_hvac_up
+          state:
+            disabled: !lambda "return std::isnan(id(hvac_target));"
+      - lvgl.widget.update:
+          id: btn_hvac_down
+          state:
+            disabled: !lambda "return std::isnan(id(hvac_target));"
+
+  - id: hvac_adjust
+    parameters:
+      delta: float
+    then:
+      - lambda: |-
+          float t = id(hvac_target);
+          if (std::isnan(t)) return;
+          id(hvac_target) = std::min((float) ${hvac_max}, std::max((float) ${hvac_min}, t + delta));
+      - script.execute: refresh_hvac
+      - script.execute: hvac_send_target
+
+  # Debounce: send the setpoint once the arrows stop being tapped.
+  - id: hvac_send_target
+    mode: restart
+    then:
+      - delay: ${hvac_send_delay}
+      - homeassistant.action:
+          action: climate.set_temperature
+          data:
+            entity_id: ${hvac}
+            temperature: !lambda 'return str_sprintf("%.1f", id(hvac_target));'
+
+  # Restarted by every tap on the HVAC screen; returns to the main screen once it runs out.
+  - id: hvac_page_timeout
+    mode: restart
+    then:
+      - delay: ${hvac_page_timeout}
+      - lvgl.page.show: main_page
 
 # ---------------------------------------------------------------- UI
 
@@ -304,6 +385,9 @@ font:
       - "\U000F0717" # snowflake
       - "\U000F0425" # power
       - "\U000F1A79" # sun-snowflake-variant
+      - "\U000F0143" # chevron-up
+      - "\U000F0140" # chevron-down
+      - "\U000F0156" # close
   - file: "https://raw.githubusercontent.com/Templarian/MaterialDesign-Webfont/master/fonts/materialdesignicons-webfont.ttf"
     id: mdi_20
     size: 20
@@ -449,13 +533,86 @@ lvgl:
               - label: { id: lbl_hvac_current, align: CENTER, x: 4, text: "--°", text_font: montserrat_28 }
               - label: { align: TOP_RIGHT, x: -22, y: 16, text: "\U000F0393", text_font: mdi_20 }
               - label: { id: lbl_hvac_target, align: BOTTOM_RIGHT, x: -16, y: -14, text: "--°", text_font: montserrat_16 }
+            on_click:
+              - lvgl.page.show: hvac_page
+              - script.execute: hvac_page_timeout
+
+    # Full-screen HVAC controls, opened by tapping the HVAC tile.
+    #   y   5- 45  close (X), room temperature
+    #   y  50-102  target up
+    #   y 108-165  target
+    #   y 170-222  target down
+    #   y 232-312  mode: Off / Heat / Cool (current mode highlighted in its color)
+    - id: hvac_page
+      bg_color: 0x000000
+      text_color: 0xE8ECF2
+      scrollable: false
+      widgets:
+        - button:
+            id: btn_hvac_close
+            x: 5
+            y: 5
+            width: 48
+            height: 40
+            widgets: [label: { align: CENTER, text: "\U000F0156", text_font: mdi_28 }]
+            on_click:
+              - script.stop: hvac_page_timeout
+              - lvgl.page.show: main_page
+        - label: { id: lbl_hvac_page_room, align: TOP_RIGHT, x: -10, y: 15, text: "Room --°", text_font: montserrat_16 }
+        - button:
+            id: btn_hvac_up
+            x: 60
+            y: 50
+            width: 120
+            height: 52
+            widgets: [label: { align: CENTER, text: "\U000F0143", text_font: mdi_28 }]
             on_press:
               - lambda: id(tap_started_ms) = millis();
             on_click:
-              - logger.log:
-                  level: INFO
-                  format: "hvac tap held %ums (mode=%s)"
-                  args: ['(unsigned) (millis() - id(tap_started_ms))', 'id(ha_hvac_mode).state.c_str()']
+              - script.execute: hvac_page_timeout
+              - if:
+                  condition:
+                    lambda: "return millis() - id(tap_started_ms) >= ${min_tap_ms};"
+                  then:
+                    - script.execute:
+                        id: hvac_adjust
+                        delta: ${hvac_step}
+        - label: { id: lbl_hvac_page_target, align: TOP_MID, y: 110, text: "--°", text_font: montserrat_48 }
+        - button:
+            id: btn_hvac_down
+            x: 60
+            y: 170
+            width: 120
+            height: 52
+            widgets: [label: { align: CENTER, text: "\U000F0140", text_font: mdi_28 }]
+            on_press:
+              - lambda: id(tap_started_ms) = millis();
+            on_click:
+              - script.execute: hvac_page_timeout
+              - if:
+                  condition:
+                    lambda: "return millis() - id(tap_started_ms) >= ${min_tap_ms};"
+                  then:
+                    - script.execute:
+                        id: hvac_adjust
+                        delta: -${hvac_step}
+        - button:
+            id: btn_hvac_mode_off
+            x: 5
+            y: 232
+            width: 73
+            height: 80
+            checked:
+              bg_color: 0x8A93A6
+              bg_grad_color: 0x8A93A6
+              text_color: 0x151A22
+            widgets:
+              - label: { align: TOP_MID, y: 12, text: "\U000F0425", text_font: mdi_28 }
+              - label: { align: BOTTOM_MID, y: -10, text: "Off", text_font: montserrat_14 }
+            on_press:
+              - lambda: id(tap_started_ms) = millis();
+            on_click:
+              - script.execute: hvac_page_timeout
               - if:
                   condition:
                     lambda: "return millis() - id(tap_started_ms) >= ${min_tap_ms};"
@@ -464,8 +621,56 @@ lvgl:
                         action: climate.set_hvac_mode
                         data:
                           entity_id: ${hvac}
-                          hvac_mode: !lambda |-
-                            auto m = id(ha_hvac_mode).state;
-                            if (m == "off") return std::string("heat");
-                            if (m == "heat") return std::string("cool");
-                            return std::string("off");
+                          hvac_mode: "off"
+        - button:
+            id: btn_hvac_mode_heat
+            x: 83
+            y: 232
+            width: 74
+            height: 80
+            checked:
+              bg_color: 0xF28C38
+              bg_grad_color: 0xF28C38
+              text_color: 0x151A22
+            widgets:
+              - label: { align: TOP_MID, y: 12, text: "\U000F0238", text_font: mdi_28 }
+              - label: { align: BOTTOM_MID, y: -10, text: "Heat", text_font: montserrat_14 }
+            on_press:
+              - lambda: id(tap_started_ms) = millis();
+            on_click:
+              - script.execute: hvac_page_timeout
+              - if:
+                  condition:
+                    lambda: "return millis() - id(tap_started_ms) >= ${min_tap_ms};"
+                  then:
+                    - homeassistant.action:
+                        action: climate.set_hvac_mode
+                        data:
+                          entity_id: ${hvac}
+                          hvac_mode: "heat"
+        - button:
+            id: btn_hvac_mode_cool
+            x: 162
+            y: 232
+            width: 73
+            height: 80
+            checked:
+              bg_color: 0x4FA3F7
+              bg_grad_color: 0x4FA3F7
+              text_color: 0x151A22
+            widgets:
+              - label: { align: TOP_MID, y: 12, text: "\U000F0717", text_font: mdi_28 }
+              - label: { align: BOTTOM_MID, y: -10, text: "Cool", text_font: montserrat_14 }
+            on_press:
+              - lambda: id(tap_started_ms) = millis();
+            on_click:
+              - script.execute: hvac_page_timeout
+              - if:
+                  condition:
+                    lambda: "return millis() - id(tap_started_ms) >= ${min_tap_ms};"
+                  then:
+                    - homeassistant.action:
+                        action: climate.set_hvac_mode
+                        data:
+                          entity_id: ${hvac}
+                          hvac_mode: "cool"
