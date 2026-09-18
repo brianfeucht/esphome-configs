@@ -19,7 +19,8 @@ api:
 # Enable OTA updates
 ota:
   - platform: esphome
-    password: !secret ota_password
+    allow_partition_access: true
+    encryption: {}
 
 # WiFi configuration
 wifi:
