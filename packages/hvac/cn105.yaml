@@ -7,6 +7,8 @@ substitutions:
   uart_rx_pin: "40"
   status_led_pin: "15"
   climate_update_interval: "1.5s"
+  # Allow `esphome upload --bootloader` over OTA
+  ota_allow_partition_access: "true"
 
 # External component for CN105
 external_components:

@@ -3,6 +3,8 @@
 #   esphome_base: github://brianfeucht/esphome-configs/packages/base.yaml
 substitutions:
   friendly_name: ${devicename}
+  # ESP32 only; set to "true" in ESP32 packages to allow OTA bootloader/partition table updates
+  ota_allow_partition_access: "false"
 
 # Core ESPHome configuration
 esphome:
@@ -19,6 +21,7 @@ api:
 # Enable OTA updates
 ota:
   - platform: esphome
+    allow_partition_access: ${ota_allow_partition_access}
     encryption: {}
 
 # WiFi configuration
