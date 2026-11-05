@@ -19,6 +19,9 @@ esp32:
   board: ${board_type}
   framework:
     type: esp-idf
+    advanced:
+      # Only link the flash driver these boards use (suggested by the runtime warning) to save IRAM
+      flash_chip: generic
 
 # UART configuration for CN105
 uart:
