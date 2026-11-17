@@ -8,3 +8,8 @@ substitutions:
   devicename: test-device
   board_type: lolin_s3_mini
   status_led_pin: GPIO47
+
+# Real devices set their own key; base.yaml's encrypted OTA needs one to inherit.
+api:
+  encryption:
+    key: !secret api_encryption_key

@@ -9,3 +9,8 @@ packages:
   esphome_base: !include ../packages/base.yaml
   cyd: !include ../packages/display/cyd-2432s028r.yaml
   west_office_panel: !include ../packages/display/west-office-panel.yaml
+
+# Real devices set their own key; base.yaml's encrypted OTA needs one to inherit.
+api:
+  encryption:
+    key: !secret api_encryption_key

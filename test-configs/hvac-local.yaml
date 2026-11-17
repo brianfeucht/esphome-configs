@@ -13,3 +13,8 @@ packages:
   cn105: !include ../packages/hvac/cn105.yaml
   remote_temp: !include ../packages/hvac/remote-temperature.yaml
   # dual_setpoint: !include ../packages/hvac/dual-setpoint.yaml
+
+# Real devices set their own key; base.yaml's encrypted OTA needs one to inherit.
+api:
+  encryption:
+    key: !secret api_encryption_key
