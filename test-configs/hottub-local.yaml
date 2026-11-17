@@ -7,3 +7,8 @@ logger:
   level: DEBUG
   logs:
     BalboaSpa.CRC: NONE
+
+# Real devices set their own key; base.yaml's encrypted OTA needs one to inherit.
+api:
+  encryption:
+    key: !secret api_encryption_key
