@@ -1,0 +1,20 @@
+# Test configuration for the Louder-ESP32-S3-Plus package - local import
+substitutions:
+  name: louder-test
+  friendly_name: Louder Test
+
+packages:
+  louder: !include ../packages/audio/louder-plus-s3.yaml
+
+# Real devices set their own key; encrypted OTA needs one to inherit.
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    encryption:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password

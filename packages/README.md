@@ -106,6 +106,41 @@ packages:
 
 **Dependencies:** Requires `base.yaml` and `display/cyd-2432s028r.yaml`. In Home Assistant, enable "Allow the device to perform Home Assistant actions" for the device.
 
+### Leavenworth Packages
+
+These are complete devices: they set the board, logger and everything but the
+device's identity and secrets, and don't use `base.yaml`. The device stub sets
+the substitutions listed, plus `api` encryption, `ota` and `wifi`.
+
+#### `garage/ratgdo-drycontact-enc.yaml`
+Genie Odyssey 1000 on a ratgdo32 v3.2 board, dry contact + encoder, built on upstream's `base_drycontact_enc.yaml`.
+
+**Required substitutions:** `id_prefix` (C identifier), `device_name`, `friendly_name`
+
+#### `audio/hifi-esp32-s3.yaml`
+Sonocotta HiFi-ESP32-S3 as a Sendspin player.
+
+**Required substitutions:** `id_prefix`, `friendly_name` (must be a substitution; the sonocotta packages reference it)
+
+#### `audio/louder-plus-s3.yaml`
+Sonocotta Louder-ESP32-S3-Plus (TAS5825M) driving a passive 2-way speaker, as a Music Assistant media player. Set `tas58xx_analog_gain` to match the power supply.
+
+**Required substitutions:** `name`, `friendly_name`
+
+#### `propane/propane-monitor.yaml`
+Propane level, sensor status and RSSI from the tank sensor's BLE advertisements. Scans actively and has no `bluetooth_proxy`, since the level only arrives in an active scan's response.
+
+**Required substitutions:** `name`, `friendly_name`, `propane_mac`
+
+**Import with:**
+```yaml
+packages:
+  esphome-configs:
+    url: https://github.com/brianfeucht/esphome-configs
+    ref: main
+    files: [packages/propane/propane-monitor.yaml]
+```
+
 #### Coming Soon
 - `dht-sensor.yaml` - DHT22 temperature and humidity sensor
 - `relay-switch.yaml` - Basic relay control with optional physical button

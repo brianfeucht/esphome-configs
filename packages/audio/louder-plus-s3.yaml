@@ -1,0 +1,125 @@
+# ============================================================
+# Sonocotta Louder-ESP32-S3-Plus  (TAS5825M class-D amp)
+# Driving a passive 2-way speaker: woofer + ribbon tweeter
+# ============================================================
+# Speaker wiring: amp L+/L- and R+/R- go to the speakers' binding
+# posts. The speaker's OWN passive crossover protects the ribbon.
+# Do NOT bi-amp the ribbon directly off a channel - see notes.
+#
+# Exposes a media_player entity to Home Assistant, which Music
+# Assistant picks up and streams to as lossless FLAC 48k/16.
+# ============================================================
+#
+# Required substitutions: name, friendly_name.
+# The device sets api, ota and wifi.
+
+substitutions:
+  task_stack_in_psram: "true"
+
+  # ---- I2S audio pins (fixed by the S3 Plus board) ----
+  i2s_lrclk_pin: GPIO15
+  i2s_bclk_pin: GPIO14
+  i2s_dout_pin: GPIO16
+
+  # ---- TAS5825M amp/DAC ----
+  tas58xx_variant: TAS5825M
+  tas58xx_enable_pin: GPIO17      # PWDN
+  i2c_sda_pin: GPIO8
+  i2c_scl_pin: GPIO9
+
+  # ---- Amp tuning: SET analog_gain TO MATCH YOUR PSU ----
+  # 0dB = 29.5V peak output. Pick the row at or below your supply:
+  #   5V -> -15.5db | 12V -> -8db | 15V -> -6db
+  #   19V -> -4db   | 24V -> -2db | 28V -> 0db
+  tas58xx_analog_gain: -8db       # <-- change for your adapter
+  tas58xx_dac_mode: BTL           # BTL = 2ch stereo
+  tas58xx_mixer_mode: STEREO
+  tas58xx_modulation: BD_MODE     # keep BD_MODE with a ribbon tweeter
+  tas58xx_volume_max: -3dB        # headroom cap: protects the ribbon
+  tas58xx_volume_min: -60dB
+  tas58xx_refresh_eq: AUTO
+
+  # ---- Onboard extras ----
+  rgb_led_pin: GPIO21
+  ir_rx_pin: GPIO07
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  min_version: 2026.3.0   # needs the current pipeline format: option
+  name_add_mac_suffix: false
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  variant: ESP32S3
+  flash_size: 8MB
+  cpu_frequency: 240MHz
+  framework:
+    type: esp-idf
+    version: recommended
+    sdkconfig_options:
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+      CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB: "y"
+      CONFIG_SPIRAM_RODATA: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
+      CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
+      CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y"
+
+psram:
+  mode: octal
+  speed: 80MHz
+  ignore_not_found: false
+
+logger:
+  level: INFO
+
+# ===== Sonocotta's maintained packages =====
+packages:
+  esparagus_remote:
+    url: https://github.com/sonocotta/esp32-audio-dock
+    ref: main
+    files:
+      # TAS58xx amp + 15-band EQ ganged across both channels.
+      # Use the 15-band EQ to tame the ribbon's top end if it's hot.
+      - firmware/esphome/packages/dac-tas58xx.yaml
+
+      - firmware/esphome/packages/audio.yaml
+      - firmware/esphome/packages/audio-addon-external-dac.yaml
+      - firmware/esphome/packages/media-player.yaml
+      - firmware/esphome/packages/media-player-addon-dac-enable.yaml
+      - firmware/esphome/packages/media-player-addon-tas58xx.yaml
+
+      - firmware/esphome/packages/light.yaml
+      - firmware/esphome/packages/ir-receiver.yaml
+      - firmware/esphome/packages/monitoring.yaml
+      - firmware/esphome/packages/monitoring-wifi.yaml
+
+# ===== Music Assistant =====
+# MA auto-detects whatever the pipeline advertises, so pin it to
+# lossless FLAC 48kHz/16-bit stereo: no HA-side transcoding loss,
+# and it matches the resampler + I2S rate so nothing resamples.
+media_player:
+  - id: !extend external_media_player
+    media_pipeline:
+      format: FLAC
+      sample_rate: 48000
+      num_channels: 2
+    announcement_pipeline:
+      format: FLAC
+      sample_rate: 48000
+      num_channels: 1
+
+# ===== Ribbon tweeter protection =====
+# The TAS5825M latches its own output stage off on DC-offset and
+# over-current faults, which is what would otherwise kill a ribbon,
+# so no automation is needed for that. The dac package already
+# exposes those as HA diagnostic entities ("Left/Right Channel DC
+# Fault", "... Over Current") - worth an HA alert on them.
+#
+# Your real protections are above and in the wiring:
+#   - analog_gain matched to the PSU, so clipping is impossible
+#   - volume_max headroom cap
+#   - BD_MODE modulation (least HF switching residue)
+#   - the speaker's own passive crossover high-passing the ribbon

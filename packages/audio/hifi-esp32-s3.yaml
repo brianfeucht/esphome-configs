@@ -1,0 +1,56 @@
+# Sonocotta HiFi-ESP32-S3: Sendspin player feeding a powered speaker.
+#
+# Required substitutions:
+#   id_prefix      device name
+#   friendly_name  must be a substitution, not just esphome.friendly_name - the
+#                  sonocotta packages reference ${friendly_name} and it stays
+#                  literal if it is only set there.
+# The device sets api encryption, ota and wifi.
+substitutions:
+  i2s_lrclk_pin: GPIO15
+  i2s_bclk_pin: GPIO14
+  i2s_dout_pin: GPIO16
+  rgb_led_pin: GPIO09
+  task_stack_in_psram: "true"
+
+esphome:
+  name: ${id_prefix}
+  friendly_name: ${friendly_name}
+
+esp32:
+  variant: ESP32S3
+  flash_size: 8MB
+  cpu_frequency: 240MHz
+  framework:
+    type: esp-idf
+    version: recommended
+    sdkconfig_options:
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+      CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB: "y"
+      CONFIG_SPIRAM_RODATA: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
+      CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
+      CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y"
+
+psram:
+  mode: octal
+  speed: 80MHz
+  ignore_not_found: false
+
+logger:
+  level: INFO
+
+web_server:
+  local: true
+
+packages:
+  esparagus_remote:
+    url: https://github.com/sonocotta/esp32-audio-dock
+    ref: main
+    files:
+      - firmware/esphome/packages/audio.yaml
+      - firmware/esphome/packages/sendspin.yaml
+      - firmware/esphome/packages/light.yaml
+      - firmware/esphome/packages/monitoring.yaml
+      - firmware/esphome/packages/monitoring-wifi.yaml

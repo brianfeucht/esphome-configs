@@ -27,6 +27,14 @@ jobs:
             yaml-file: test-configs/room-sensor.yaml
           - name: "West Office Panel Test"
             yaml-file: test-configs/west-office-panel.yaml
+          - name: "Garage ratgdo Test"
+            yaml-file: test-configs/garage-ratgdo.yaml
+          - name: "HiFi-ESP32-S3 Test"
+            yaml-file: test-configs/audio-hifi-esp32-s3.yaml
+          - name: "Louder-ESP32-S3-Plus Test"
+            yaml-file: test-configs/audio-louder-plus-s3.yaml
+          - name: "Propane Monitor Test"
+            yaml-file: test-configs/propane-monitor.yaml
       fail-fast: false
     
     steps:
