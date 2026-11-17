@@ -38,3 +38,7 @@ packages:
 - **`packages/hottub/balboa.yaml`** - Balboa Spa control
 - **`packages/display/cyd-2432s028r.yaml`** - ESP32-2432S028R "Cheap Yellow Display" hardware (portrait LVGL, touch, backlight dimming)
 - **`packages/display/west-office-panel.yaml`** - West Office wall panel UI: lights, shades, HVAC, CO2 (requires cyd-2432s028r)
+- **`packages/garage/ratgdo-drycontact-enc.yaml`** - ratgdo32 v3.2 garage door opener, dry contact + encoder (Leavenworth)
+- **`packages/audio/hifi-esp32-s3.yaml`** - Sonocotta HiFi-ESP32-S3 Sendspin player (Leavenworth)
+- **`packages/audio/louder-plus-s3.yaml`** - Sonocotta Louder-ESP32-S3-Plus amp for a passive speaker (Leavenworth)
+- **`packages/propane/propane-monitor.yaml`** - Propane tank level from the tank sensor's BLE advertisements (Leavenworth)
