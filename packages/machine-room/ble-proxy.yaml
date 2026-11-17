@@ -5,11 +5,6 @@ substitutions:
   propane_mac: D7:6E:E8:E6:A4:28
   status_led_pin: GPIO2
 
-esphome:
-  project:
-    name: esphome.bluetooth-proxy
-    version: "1.0"
-
 esp32:
   board: esp32dev
   framework:
@@ -17,14 +12,11 @@ esp32:
     advanced:
       minimum_chip_revision: "3.1"
 
-dashboard_import:
-  package_import_url: github://esphome/firmware/bluetooth-proxy/esp32-generic.yaml@main
-
-bluetooth_proxy:
-  active: true
-  
+# No bluetooth_proxy: HA would run the scanner passive, and the sensor's name,
+# which carries the level, only arrives in response to an active scan.
 esp32_ble_tracker:
   scan_parameters:
+     active: true
      window: 30ms
      interval: 100ms
   on_ble_advertise:
@@ -52,6 +44,8 @@ sensor:
     name: Propane Level
     id: propane_level
     unit_of_measurement: '%'
+    state_class: measurement
+    accuracy_decimals: 1
 # Reports the signal strength auto magically.
   - platform: ble_rssi
     mac_address: ${propane_mac}
