@@ -44,6 +44,6 @@ jobs:
         uses: actions/checkout@v5
         
       - name: Build & Validate ${{ matrix.name }}
-        uses: esphome/build-action@v7.1.0
+        uses: esphome/build-action@v8.1.0
         with:
           yaml-file: ${{ matrix.yaml-file }}
