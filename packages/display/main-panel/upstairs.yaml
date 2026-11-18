@@ -1,0 +1,368 @@
+# Main panel - Upstairs: scenes, under-cabinet themes, HA entities and scripts.
+
+globals:
+  - id: upstairs_mode    # 0 wakeup, 1 morning, 2 afternoon, 3 full, 4 evening, 5 off, 6 custom
+    type: int
+    initial_value: "-1"
+  - id: upstairs_on
+    type: int
+    initial_value: "0"
+  - id: cab_theme        # index into the theme row, -1 = none matches
+    type: int
+    initial_value: "-1"
+  - id: upstairs_hold
+    type: int
+    initial_value: "-1"
+  - id: theme_hold
+    type: int
+    initial_value: "-1"
+
+sensor:
+  # ---- Upstairs: keep in step with tools/panel_scenes.py ----
+  - platform: homeassistant
+    id: foyer_bri
+    entity_id: light.foyer_entry_chandelier
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: foyer_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: foyer_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: foyer_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: upstairs_refresh
+
+  - platform: homeassistant
+    id: family_bri
+    entity_id: light.family_room_family_room_chandelier
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: family_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: family_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: family_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: upstairs_refresh
+
+  - platform: homeassistant
+    id: dining_bri
+    entity_id: light.dining_room_dining_room_chandelier
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: dining_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: dining_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: dining_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: upstairs_refresh
+
+  - platform: homeassistant
+    id: overhead_bri
+    entity_id: light.kitchen_kitchen_overhead
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: overhead_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: overhead_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: overhead_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: upstairs_refresh
+
+  - platform: homeassistant
+    id: island_bri
+    entity_id: light.kitchen_kitchen_island_pendant
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: island_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: island_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: island_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: upstairs_refresh
+
+  - platform: homeassistant
+    id: cabn_bri
+    entity_id: light.kitchen_north_under_cabinet_dimmer
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: cabn_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: cabn_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: cabn_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: upstairs_refresh
+
+  - platform: homeassistant
+    id: cabe_bri
+    entity_id: light.kitchen_east_under_cabinet_dimmer
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: cabe_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: cabe_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: cabe_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: upstairs_refresh
+
+  - platform: homeassistant
+    id: cabw_bri
+    entity_id: light.kitchen_west_under_cabinet_dimmer
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: cabw_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: cabw_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: cabw_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: upstairs_refresh
+
+text_sensor:
+  # Under-cabinet colours, matched against the theme row.
+  - platform: homeassistant
+    id: cabn_rgbw
+    entity_id: light.kitchen_north_under_cabinet_dimmer
+    attribute: rgbw_color
+    internal: true
+    on_value:
+      - script.execute: theme_refresh
+
+  - platform: homeassistant
+    id: cabe_rgbw
+    entity_id: light.kitchen_east_under_cabinet_dimmer
+    attribute: rgbw_color
+    internal: true
+    on_value:
+      - script.execute: theme_refresh
+
+  - platform: homeassistant
+    id: cabw_rgbw
+    entity_id: light.kitchen_west_under_cabinet_dimmer
+    attribute: rgbw_color
+    internal: true
+    on_value:
+      - script.execute: theme_refresh
+
+script:
+  # Which Upstairs scene the lights match: every light within 5 points
+  # of that scene's level (tools/panel_scenes.py UPSTAIRS_LEVELS).
+  - id: upstairs_refresh
+    then:
+      - lambda: |-
+          //                    foyer family dining overhd island cabN cabE cabW
+          static const uint8_t L[5][8] = {
+            { 27, 21,  0,  0, 13,  3,  3,  3},   // Wakeup
+            { 35, 35,  0, 10, 25, 51, 51, 51},   // Morning
+            { 40, 60, 40, 50, 60, 80, 80, 80},   // Afternoon
+            {100,100,100,100,100,100,100,100},   // Full
+            { 20, 30, 30,  0, 25, 25, 25, 25},   // Evening
+          };
+          const float bri[8] = {
+            id(foyer_bri).state, id(family_bri).state, id(dining_bri).state,
+            id(overhead_bri).state, id(island_bri).state,
+            id(cabn_bri).state, id(cabe_bri).state, id(cabw_bri).state,
+          };
+          int pct[8], on = 0;
+          for (int i = 0; i < 8; i++) {
+            pct[i] = (std::isnan(bri[i]) || bri[i] <= 0) ? 0 : (int) roundf(bri[i] * 100.0f / 255.0f);
+            if (pct[i] > 0) on++;
+          }
+          int mode = 6;                    // Custom
+          if (on == 0) mode = 5;       // Off
+          else for (int s = 0; s < 5 && mode == 6; s++) {
+            bool match = true;
+            for (int i = 0; i < 8 && match; i++)
+              match = L[s][i] == 0 ? pct[i] == 0 : (pct[i] > 0 && abs(pct[i] - L[s][i]) <= 5);
+            if (match) mode = s;
+          }
+          if (id(upstairs_hold) >= 0) mode = id(upstairs_hold);
+          id(upstairs_mode) = mode;
+          id(upstairs_on) = on;
+      - lvgl.label.update:
+          id: [home_upstairs_status, upstairs_status]
+          text: !lambda |-
+            if (id(upstairs_on) == 0) return std::string("All off");
+            return str_sprintf("%s%d of 8 on", id(upstairs_mode) == 6 ? "Custom · " : "", id(upstairs_on));
+      - lvgl.widget.update:
+          id: [tile_upstairs, tile_upstairs_hd]
+          state:
+            checked: !lambda return id(upstairs_on) > 0;
+      - lvgl.widget.update:
+          id: [home_up_0, up_0]
+          state:
+            checked: !lambda return id(upstairs_mode) == 0;
+      - lvgl.widget.update:
+          id: [home_up_1, up_1]
+          state:
+            checked: !lambda return id(upstairs_mode) == 1;
+      - lvgl.widget.update:
+          id: [home_up_2, up_2]
+          state:
+            checked: !lambda return id(upstairs_mode) == 2;
+      - lvgl.widget.update:
+          id: [home_up_3, up_3]
+          state:
+            checked: !lambda return id(upstairs_mode) == 3;
+      - lvgl.widget.update:
+          id: [home_up_4, up_4]
+          state:
+            checked: !lambda return id(upstairs_mode) == 4;
+      - lvgl.widget.update:
+          id: [home_up_5, up_5]
+          state:
+            checked: !lambda return id(upstairs_mode) == 5;
+
+  - id: upstairs_pick
+    mode: restart
+    parameters:
+      mode: int
+    then:
+      - lambda: id(upstairs_hold) = mode;
+      - script.execute: upstairs_refresh
+      - delay: 6s
+      - lambda: id(upstairs_hold) = -1;
+      - script.execute: upstairs_refresh
+
+  # Which under-cabinet theme the strips show. Colours are compared after
+  # scaling each to full intensity, since the dimmers report a scaled RGBW.
+  - id: theme_refresh
+    then:
+      - lambda: |-
+          static const uint8_t T[5][3][4] = {
+            {{0,0,0,255}, {0,0,0,255}, {0,0,0,255}},          // White
+            {{135,255,0,0}, {0,80,255,0}, {135,255,0,0}},     // Seahawks
+            {{70,0,150,0}, {255,70,0,0}, {70,0,150,0}},       // Halloween
+            {{255,0,0,0}, {0,190,30,0}, {255,0,0,0}},         // Christmas
+            {{255,0,0,0}, {0,0,0,110}, {0,0,255,0}},          // July 4th
+          };
+          auto parse = [](const std::string &s, float out[4]) {
+            int n = 0, v = -1;
+            for (char c : s + ",") {
+              if (c >= '0' && c <= '9') v = (v < 0 ? 0 : v * 10) + (c - '0');
+              else if (v >= 0) { if (n < 4) out[n] = v; n++; v = -1; }
+            }
+            if (n != 4) return false;
+            float m = std::max(std::max(out[0], out[1]), std::max(out[2], out[3]));
+            if (m <= 0) return false;
+            for (int i = 0; i < 4; i++) out[i] = out[i] * 255.0f / m;
+            return true;
+          };
+          const std::string strips[3] = {id(cabn_rgbw).state, id(cabe_rgbw).state, id(cabw_rgbw).state};
+          float got[3][4];
+          int theme = -1;
+          bool ok = true;
+          for (int k = 0; k < 3; k++) ok = ok && parse(strips[k], got[k]);
+          for (int t = 0; ok && t < 5 && theme < 0; t++) {
+            bool match = true;
+            for (int k = 0; k < 3 && match; k++) {
+              float m = 0;
+              for (int i = 0; i < 4; i++) m = std::max(m, (float) T[t][k][i]);
+              float d = 0;
+              for (int i = 0; i < 4; i++) d += fabsf(T[t][k][i] * 255.0f / m - got[k][i]);
+              match = d <= 60;
+            }
+            if (match) theme = t;
+          }
+          if (id(theme_hold) >= 0) theme = id(theme_hold);
+          id(cab_theme) = theme;
+      - lvgl.widget.update:
+          id: theme_0
+          state:
+            checked: !lambda return id(cab_theme) == 0;
+      - lvgl.widget.update:
+          id: theme_1
+          state:
+            checked: !lambda return id(cab_theme) == 1;
+      - lvgl.widget.update:
+          id: theme_2
+          state:
+            checked: !lambda return id(cab_theme) == 2;
+      - lvgl.widget.update:
+          id: theme_3
+          state:
+            checked: !lambda return id(cab_theme) == 3;
+      - lvgl.widget.update:
+          id: theme_4
+          state:
+            checked: !lambda return id(cab_theme) == 4;
+
+  - id: theme_pick
+    mode: restart
+    parameters:
+      theme: int
+    then:
+      - lambda: id(theme_hold) = theme;
+      - script.execute: theme_refresh
+      - delay: 6s
+      - lambda: id(theme_hold) = -1;
+      - script.execute: theme_refresh

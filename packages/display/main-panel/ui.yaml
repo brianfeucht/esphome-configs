@@ -1,0 +1,1429 @@
+# Main panel - every LVGL page, and the shared widget pieces they reference.
+
+# Shared widget pieces, referenced below as *name (or merged with
+# `<<: *name` and then extended). ESPHome ignores dot-prefixed keys, so
+# this block only exists to hold the anchors.
+.widgets:
+  # Area tiles on the home screen
+  tile_frame: &tile_frame
+    styles: s_tile
+    scrollable: false
+    pad_all: 14
+    pad_left: 18
+    pad_right: 18
+    radius: 18
+  area_tile: &area_tile      # a tile that opens its area's page
+    <<: *tile_frame
+    checked:
+      text_color: ${c_accent}
+    pressed:
+      bg_color: ${c_raised}
+  tile_header: &tile_header  # icon, name, status; pair with a checked colour
+    styles: s_bare
+    scrollable: false
+    clickable: false         # taps fall through to the tile
+    text_color: ${c_text}
+    align: TOP_LEFT
+    width: 100%
+    height: 36
+    layout:
+      type: flex
+      flex_flow: ROW
+      flex_align_cross: CENTER
+      flex_align_track: CENTER
+      pad_column: 12
+  amber_when_on: &amber_when_on {checked: {text_color: "${c_accent}"}}
+  tile_chevron: &tile_chevron
+    text: "\U000F0142"
+    text_font: f_icon
+    text_color: ${c_muted}
+    align: TOP_RIGHT
+    x: 6
+    y: -4
+
+  # Detail pages
+  back_button: &back_button
+    x: 24
+    y: 18
+    width: 150
+    height: 56
+    layout:
+      type: flex
+      flex_flow: ROW
+      flex_align_main: CENTER
+      flex_align_cross: CENTER
+      flex_align_track: CENTER
+      pad_column: 4
+    on_click:
+      - lvgl.page.show:
+          id: home_page
+          animation: MOVE_RIGHT
+          time: 200ms
+    widgets:
+      - label: {text: "\U000F0141", text_font: f_icon}
+      - label: {text: Home}
+  icon_over_label: &icon_over_label   # scene buttons
+    {type: flex, flex_flow: COLUMN, flex_align_main: CENTER, flex_align_cross: CENTER, flex_align_track: CENTER, pad_row: 2}
+  icon_beside_label: &icon_beside_label
+    {type: flex, flex_flow: ROW, flex_align_main: CENTER, flex_align_cross: CENTER, flex_align_track: CENTER, pad_column: 12}
+  swatch_row: &swatch_row             # under-cabinet theme buttons
+    {type: flex, flex_flow: ROW, flex_align_main: CENTER, flex_align_cross: CENTER, flex_align_track: CENTER, pad_column: 5}
+  swatch: &swatch
+    {width: 14, height: 14, radius: 7, bg_opa: COVER, border_width: 0, pad_all: 0}
+
+  # One device card: icon and name top left, value top right, slider (or
+  # on/off state) along the bottom. Lit cards go amber.
+  card: &card
+    styles: s_card
+    scrollable: false
+    checked:
+      bg_color: ${c_lit}
+      border_color: ${c_lit_edge}
+      text_color: ${c_accent}
+  card_icon: &card_icon {text_font: f_icon, align: TOP_LEFT, x: -4, y: -6}
+  card_name: &card_name {text_color: "${c_text}", align: TOP_LEFT, x: 42}
+  card_value: &card_value {text: "--", styles: s_muted, align: TOP_RIGHT, y: 2}
+  card_state: &card_state {text: "--", styles: s_muted, align: BOTTOM_LEFT, x: 42}
+  card_slider: &card_slider {align: BOTTOM_MID, width: 100%, height: 16, min_value: 0, max_value: 100, value: 0}
+
+lvgl:
+  text_font: f_body
+  default_font: f_body
+  bg_color: ${c_bg}
+
+  style_definitions:
+    - id: s_page
+      bg_color: ${c_bg}
+      bg_opa: COVER
+      border_width: 0
+      pad_all: 0
+      radius: 0
+      text_color: ${c_text}    # inherited by every label below
+    - id: s_bare               # layout-only containers
+      bg_opa: TRANSP
+      border_width: 0
+      pad_all: 0
+      radius: 0
+    - id: s_tile               # home-screen area tile
+      bg_color: ${c_surface}
+      bg_opa: COVER
+      border_width: 0
+      radius: 22
+      pad_all: 22
+      shadow_width: 0
+      text_color: ${c_text}
+    - id: s_card               # one device on a detail page
+      bg_color: ${c_surface}
+      bg_opa: COVER
+      border_width: 2
+      border_color: ${c_surface}
+      radius: 18
+      pad_all: 16
+      shadow_width: 0
+      text_color: ${c_muted}   # icons inherit this; lit turns it amber
+    - id: s_muted
+      text_color: ${c_muted}
+      text_font: f_small
+
+  theme:
+    button:
+      bg_color: ${c_raised}
+      bg_opa: COVER
+      text_color: ${c_text}
+      radius: 16
+      shadow_width: 0
+      border_width: 0
+      pressed:
+        bg_color: ${c_pressed}
+      checked:
+        bg_color: ${c_accent}
+        text_color: ${c_accent_ink}
+    slider:
+      bg_color: ${c_raised}
+      bg_opa: COVER
+      radius: 10
+      indicator:
+        bg_color: ${c_accent}
+        radius: 10
+      knob:
+        bg_color: ${c_text}
+        pad_all: 6
+        radius: 999
+
+  displays: [panel]
+  touchscreens: [touch]
+  buffer_size: 25%
+
+  # Idle: back to the overview and dim. Touch brightens it (see wake).
+  on_idle:
+    - timeout: 90s
+      then:
+        - lvgl.page.show: home_page
+        - light.turn_on:
+            id: backlight
+            brightness: 20%
+
+  top_layer:
+    widgets:
+      - label:
+          id: ha_offline
+          text: "\U000F05AA"
+          text_font: f_icon
+          text_color: ${c_warn}
+          align: TOP_RIGHT
+          x: -36
+          y: 30
+
+  pages:
+    # -------------------------------------------------- overview
+    - id: home_page
+      styles: s_page
+      widgets:
+        - label:
+            id: clock_time
+            text: "--:--"
+            text_font: f_clock
+            x: 40
+            y: 18
+        - label:
+            id: clock_date
+            text: ""
+            text_color: ${c_muted}
+            x: 46
+            y: 112
+
+        # Today's forecast, right-aligned to the divider.
+        - obj:
+            styles: s_bare
+            scrollable: false
+            align: TOP_RIGHT
+            x: -344
+            y: 18
+            width: SIZE_CONTENT
+            height: SIZE_CONTENT
+            layout:
+              type: flex
+              flex_flow: ROW
+              flex_align_cross: CENTER
+              flex_align_track: CENTER
+              pad_column: 14
+            widgets:
+              - label:
+                  id: wx_icon
+                  text: ""
+                  text_font: f_wx
+                  text_color: ${c_text}
+              - label:
+                  id: wx_temp
+                  text: "--°"
+                  text_font: f_clock
+                  text_color: ${c_text}
+        - label:
+            id: wx_line
+            text: ""
+            text_color: ${c_muted}
+            align: TOP_RIGHT
+            x: -348
+            y: 112
+
+        # Tomorrow, left-aligned after the divider; stops short of the
+        # offline icon in the top-right corner.
+        - obj:
+            x: 694
+            y: 30
+            width: 2
+            height: 106
+            bg_color: ${c_raised}
+            bg_opa: COVER
+            border_width: 0
+            radius: 1
+        - label:
+            text: Tomorrow
+            styles: s_muted
+            x: 714
+            y: 22
+        - obj:
+            styles: s_bare
+            scrollable: false
+            x: 714
+            y: 50
+            width: SIZE_CONTENT
+            height: SIZE_CONTENT
+            layout:
+              type: flex
+              flex_flow: ROW
+              flex_align_cross: CENTER
+              flex_align_track: CENTER
+              pad_column: 10
+            widgets:
+              - label:
+                  id: wxt_icon
+                  text: ""
+                  text_font: f_wx_md
+                  text_color: ${c_text}
+              - label:
+                  id: wxt_temps
+                  text: "--"
+                  text_font: f_title
+                  text_color: ${c_text}
+        - label:
+            id: wxt_line
+            text: ""
+            styles: s_muted
+            x: 714
+            y: 116
+
+        # Area tiles: a header that opens the area's page over its scene
+        # buttons, Off first, then roughly time of day. Upstairs (left, two rows
+        # of buttons) beside Outside over Downstairs; House across the bottom.
+        - obj:
+            id: home_tiles
+            styles: s_bare
+            scrollable: false
+            x: 40
+            y: 172
+            width: 944
+            height: 400
+            layout:
+              type: flex
+              flex_flow: COLUMN
+              pad_row: 14
+            widgets:
+              - obj:
+                  styles: s_bare
+                  scrollable: false
+                  width: 100%
+                  height: 262
+                  layout:
+                    type: flex
+                    flex_flow: ROW
+                    pad_column: 20
+                  widgets:
+                    - obj:
+                        id: tile_upstairs
+                        <<: *area_tile
+                        width: 462
+                        height: 262
+                        on_click:
+                          - lvgl.page.show:
+                              id: upstairs_page
+                              animation: MOVE_LEFT
+                              time: 200ms
+                        widgets:
+                          # Header: the whole row opens the area's page. The icon
+                          # inherits its colour, amber while the area is active.
+                          - obj:
+                              id: tile_upstairs_hd
+                              <<: [*tile_header, *amber_when_on]
+                              widgets:
+                                - label:
+                                    text: "\U000F156D"
+                                    text_font: f_icon
+                                - label:
+                                    text: Upstairs
+                                    text_font: f_title
+                                    text_color: ${c_text}
+                                - label:
+                                    id: home_upstairs_status
+                                    text: "--"
+                                    styles: s_muted
+                                    pad_top: 6
+                          - label: *tile_chevron
+                          - obj:
+                              styles: s_bare
+                              scrollable: false
+                              align: BOTTOM_MID
+                              width: 100%
+                              height: 190
+                              layout:
+                                type: grid
+                                grid_rows: [FR(1), FR(1)]
+                                grid_columns: [FR(1), FR(1), FR(1)]
+                                grid_cell_x_align: STRETCH
+                                grid_cell_y_align: STRETCH
+                                pad_row: 10
+                                pad_column: 10
+                              widgets:
+                                - button:
+                                    id: home_up_5
+                                    on_click:
+                                    - script.execute: {id: upstairs_pick, mode: 5}
+                                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_off}}
+                                    widgets:
+                                      - label: {text: "Off", align: CENTER}
+                                - button:
+                                    id: home_up_0
+                                    on_click:
+                                    - script.execute: {id: upstairs_pick, mode: 0}
+                                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_wakeup}}
+                                    widgets:
+                                      - label: {text: "Wakeup", align: CENTER}
+                                - button:
+                                    id: home_up_1
+                                    on_click:
+                                    - script.execute: {id: upstairs_pick, mode: 1}
+                                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_morning}}
+                                    widgets:
+                                      - label: {text: "Morning", align: CENTER}
+                                - button:
+                                    id: home_up_2
+                                    on_click:
+                                    - script.execute: {id: upstairs_pick, mode: 2}
+                                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_afternoon}}
+                                    widgets:
+                                      - label: {text: "Afternoon", align: CENTER}
+                                - button:
+                                    id: home_up_4
+                                    on_click:
+                                    - script.execute: {id: upstairs_pick, mode: 4}
+                                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_evening}}
+                                    widgets:
+                                      - label: {text: "Evening", align: CENTER}
+                                - button:
+                                    id: home_up_3
+                                    on_click:
+                                    - script.execute: {id: upstairs_pick, mode: 3}
+                                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_full}}
+                                    widgets:
+                                      - label: {text: "Full", align: CENTER}
+                    - obj:
+                        styles: s_bare
+                        scrollable: false
+                        width: 462
+                        height: 262
+                        layout:
+                          type: flex
+                          flex_flow: COLUMN
+                          pad_row: 14
+                        widgets:
+                          - obj:
+                              id: tile_outside
+                              <<: *area_tile
+                              width: 462
+                              height: 124
+                              on_click:
+                                - lvgl.page.show:
+                                    id: outside_page
+                                    animation: MOVE_LEFT
+                                    time: 200ms
+                              widgets:
+                                # Header: the whole row opens the area's page. The icon
+                                # inherits its colour, amber while the area is active.
+                                - obj:
+                                    id: tile_outside_hd
+                                    <<: [*tile_header, *amber_when_on]
+                                    widgets:
+                                      - label:
+                                          text: "\U000F1054"
+                                          text_font: f_icon
+                                      - label:
+                                          text: Outside
+                                          text_font: f_title
+                                          text_color: ${c_text}
+                                      - label:
+                                          id: home_outside_status
+                                          text: "--"
+                                          styles: s_muted
+                                          pad_top: 6
+                                - label: *tile_chevron
+                                - obj:
+                                    styles: s_bare
+                                    scrollable: false
+                                    align: BOTTOM_MID
+                                    width: 100%
+                                    height: 52
+                                    layout:
+                                      type: grid
+                                      grid_rows: [FR(1)]
+                                      grid_columns: [FR(1), FR(1), FR(1)]
+                                      grid_cell_x_align: STRETCH
+                                      grid_cell_y_align: STRETCH
+                                      pad_row: 10
+                                      pad_column: 10
+                                    widgets:
+                                      - button:
+                                          id: home_off
+                                          on_click:
+                                          - script.execute: {id: outside_pick, mode: 0}
+                                          - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.outside_off}}
+                                          widgets:
+                                            - label: {text: "Off", align: CENTER}
+                                      - button:
+                                          id: home_low
+                                          on_click:
+                                          - script.execute: {id: outside_pick, mode: 1}
+                                          - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.outside_low}}
+                                          widgets:
+                                            - label: {text: "Low", align: CENTER}
+                                      - button:
+                                          id: home_high
+                                          on_click:
+                                          - script.execute: {id: outside_pick, mode: 2}
+                                          - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.outside_high}}
+                                          widgets:
+                                            - label: {text: "High", align: CENTER}
+                          - obj:
+                              id: tile_downstairs
+                              <<: *area_tile
+                              width: 462
+                              height: 124
+                              on_click:
+                                - lvgl.page.show:
+                                    id: downstairs_page
+                                    animation: MOVE_LEFT
+                                    time: 200ms
+                              widgets:
+                                # Header: the whole row opens the area's page. The icon
+                                # inherits its colour, amber while the area is active.
+                                - obj:
+                                    id: tile_downstairs_hd
+                                    <<: [*tile_header, *amber_when_on]
+                                    widgets:
+                                      - label:
+                                          text: "\U000F12BE"
+                                          text_font: f_icon
+                                      - label:
+                                          text: Downstairs
+                                          text_font: f_title
+                                          text_color: ${c_text}
+                                      - label:
+                                          id: home_downstairs_status
+                                          text: "--"
+                                          styles: s_muted
+                                          pad_top: 6
+                                - label: *tile_chevron
+                                - obj:
+                                    styles: s_bare
+                                    scrollable: false
+                                    align: BOTTOM_MID
+                                    width: 100%
+                                    height: 52
+                                    layout:
+                                      type: grid
+                                      grid_rows: [FR(1)]
+                                      grid_columns: [FR(1), FR(1), FR(1), FR(1)]
+                                      grid_cell_x_align: STRETCH
+                                      grid_cell_y_align: STRETCH
+                                      pad_row: 10
+                                      pad_column: 10
+                                    widgets:
+                                      - button:
+                                          id: home_dn_3
+                                          on_click:
+                                          - script.execute: {id: downstairs_pick, mode: 3}
+                                          - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.downstairs_off}}
+                                          widgets:
+                                            - label: {text: "Off", align: CENTER}
+                                      - button:
+                                          id: home_dn_0
+                                          on_click:
+                                          - script.execute: {id: downstairs_pick, mode: 0}
+                                          - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.downstairs_morning}}
+                                          widgets:
+                                            - label: {text: "Morning", align: CENTER}
+                                      - button:
+                                          id: home_dn_2
+                                          on_click:
+                                          - script.execute: {id: downstairs_pick, mode: 2}
+                                          - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.downstairs_movie}}
+                                          widgets:
+                                            - label: {text: "Movie", align: CENTER}
+                                      - button:
+                                          id: home_dn_1
+                                          on_click:
+                                          - script.execute: {id: downstairs_pick, mode: 1}
+                                          - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.downstairs_full}}
+                                          widgets:
+                                            - label: {text: "Full", align: CENTER}
+              - obj:
+                  id: tile_house
+                  <<: *tile_frame
+                  width: 100%
+                  height: 124
+                  checked: {text_color: "${c_warn}"}
+                  widgets:
+                    # Header only: House has no page. The icon turns warn
+                    # red while anything is unlocked or open (amber means on).
+                    - obj:
+                        id: tile_house_hd
+                        <<: *tile_header
+                        checked: {text_color: "${c_warn}"}
+                        widgets:
+                          - label:
+                              id: house_icon
+                              text: "\U000F08EC"
+                              text_font: f_icon
+                          - label:
+                              text: House
+                              text_font: f_title
+                              text_color: ${c_text}
+                          - label:
+                              id: home_house_status
+                              text: "--"
+                              styles: s_muted
+                              pad_top: 6
+                    - obj:
+                        styles: s_bare
+                        scrollable: false
+                        align: BOTTOM_MID
+                        width: 100%
+                        height: 52
+                        layout:
+                          type: grid
+                          grid_rows: [FR(1)]
+                          grid_columns: [FR(1), FR(1), FR(1)]
+                          grid_cell_x_align: STRETCH
+                          grid_cell_y_align: STRETCH
+                          pad_row: 10
+                          pad_column: 10
+                        widgets:
+                          - button:
+                              id: house_1
+                              on_click:
+                              - script.execute: {id: house_busy, msg: "Turning everything off"}
+                              - homeassistant.action: {action: script.turn_on, data: {entity_id: script.house_off}}
+                              widgets:
+                                - label: {text: "All Off", align: CENTER}
+                          - button:
+                              id: house_0
+                              on_click:
+                              - script.execute: {id: house_busy, msg: "Goodnight: locking up"}
+                              - homeassistant.action: {action: script.turn_on, data: {entity_id: script.house_goodnight}}
+                              widgets:
+                                - label: {text: "Goodnight", align: CENTER}
+                          - button:
+                              id: house_2
+                              on_click:
+                              - script.execute: {id: house_busy, msg: "Locking up"}
+                              - homeassistant.action: {action: script.turn_on, data: {entity_id: script.house_lockup}}
+                              widgets:
+                                - label: {text: "Lock Up", align: CENTER}
+
+    # -------------------------------------------------- upstairs
+    - id: upstairs_page
+      styles: s_page
+      widgets:
+        - button: *back_button
+        - label:
+            text: Upstairs
+            text_font: f_title
+            align: TOP_MID
+            y: 28
+        - label:
+            id: upstairs_status
+            text: "--"
+            styles: s_muted
+            align: TOP_RIGHT
+            x: -88
+            y: 36
+
+        # Brightness scenes
+        - obj:
+            styles: s_bare
+            scrollable: false
+            x: 32
+            y: 88
+            width: 960
+            height: 84
+            layout:
+              type: grid
+              grid_rows: [FR(1)]
+              grid_columns: [FR(1), FR(1), FR(1), FR(1), FR(1), FR(1)]
+              grid_cell_x_align: STRETCH
+              grid_cell_y_align: STRETCH
+              pad_column: 14
+            widgets:
+              - button:
+                  id: up_5
+                  layout: *icon_over_label
+                  on_click:
+                    - script.execute: {id: upstairs_pick, mode: 5}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_off}}
+                  widgets:
+                    - label: {text: "\U000F0425", text_font: f_icon}
+                    - label: {text: "Off"}
+              - button:
+                  id: up_0
+                  layout: *icon_over_label
+                  on_click:
+                    - script.execute: {id: upstairs_pick, mode: 0}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_wakeup}}
+                  widgets:
+                    - label: {text: "\U000F059C", text_font: f_icon}
+                    - label: {text: "Wakeup"}
+              - button:
+                  id: up_1
+                  layout: *icon_over_label
+                  on_click:
+                    - script.execute: {id: upstairs_pick, mode: 1}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_morning}}
+                  widgets:
+                    - label: {text: "\U000F06CA", text_font: f_icon}
+                    - label: {text: "Morning"}
+              - button:
+                  id: up_2
+                  layout: *icon_over_label
+                  on_click:
+                    - script.execute: {id: upstairs_pick, mode: 2}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_afternoon}}
+                  widgets:
+                    - label: {text: "\U000F0595", text_font: f_icon}
+                    - label: {text: "Afternoon"}
+              - button:
+                  id: up_4
+                  layout: *icon_over_label
+                  on_click:
+                    - script.execute: {id: upstairs_pick, mode: 4}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_evening}}
+                  widgets:
+                    - label: {text: "\U000F059B", text_font: f_icon}
+                    - label: {text: "Evening"}
+              - button:
+                  id: up_3
+                  layout: *icon_over_label
+                  on_click:
+                    - script.execute: {id: upstairs_pick, mode: 3}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.upstairs_full}}
+                  widgets:
+                    - label: {text: "\U000F00E0", text_font: f_icon}
+                    - label: {text: "Full"}
+
+        # Under-cabinet colour themes (colour only; level stays put)
+        - obj:
+            styles: s_bare
+            scrollable: false
+            x: 32
+            y: 184
+            width: 960
+            height: 52
+            layout:
+              type: grid
+              grid_rows: [FR(1)]
+              grid_columns: [FR(1), FR(1), FR(1), FR(1), FR(1)]
+              grid_cell_x_align: STRETCH
+              grid_cell_y_align: STRETCH
+              pad_column: 16
+            widgets:
+              - button:
+                  id: theme_0
+                  layout: *swatch_row
+                  on_click:
+                    - script.execute: {id: theme_pick, theme: 0}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.under_cabinet_white}}
+                  widgets:
+                    - obj: {<<: *swatch, bg_color: 0xF4EFE2}
+                    - obj: {<<: *swatch, bg_color: 0xF4EFE2}
+                    - obj: {<<: *swatch, bg_color: 0xF4EFE2}
+                    - label: {text: "White", text_font: f_small, pad_left: 6}
+              - button:
+                  id: theme_1
+                  layout: *swatch_row
+                  on_click:
+                    - script.execute: {id: theme_pick, theme: 1}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.under_cabinet_seahawks}}
+                  widgets:
+                    - obj: {<<: *swatch, bg_color: 0x87FF00}
+                    - obj: {<<: *swatch, bg_color: 0x0050FF}
+                    - obj: {<<: *swatch, bg_color: 0x87FF00}
+                    - label: {text: "Seahawks", text_font: f_small, pad_left: 6}
+              - button:
+                  id: theme_2
+                  layout: *swatch_row
+                  on_click:
+                    - script.execute: {id: theme_pick, theme: 2}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.under_cabinet_halloween}}
+                  widgets:
+                    - obj: {<<: *swatch, bg_color: 0x7A2BD0}
+                    - obj: {<<: *swatch, bg_color: 0xFF5A00}
+                    - obj: {<<: *swatch, bg_color: 0x7A2BD0}
+                    - label: {text: "Halloween", text_font: f_small, pad_left: 6}
+              - button:
+                  id: theme_3
+                  layout: *swatch_row
+                  on_click:
+                    - script.execute: {id: theme_pick, theme: 3}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.under_cabinet_christmas}}
+                  widgets:
+                    - obj: {<<: *swatch, bg_color: 0xFF2020}
+                    - obj: {<<: *swatch, bg_color: 0x00BE1E}
+                    - obj: {<<: *swatch, bg_color: 0xFF2020}
+                    - label: {text: "Christmas", text_font: f_small, pad_left: 6}
+              - button:
+                  id: theme_4
+                  layout: *swatch_row
+                  on_click:
+                    - script.execute: {id: theme_pick, theme: 4}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.under_cabinet_july4}}
+                  widgets:
+                    - obj: {<<: *swatch, bg_color: 0xFF2020}
+                    - obj: {<<: *swatch, bg_color: 0xF4EFE2}
+                    - obj: {<<: *swatch, bg_color: 0x2050FF}
+                    - label: {text: "July 4th", text_font: f_small, pad_left: 6}
+
+        - obj:
+            styles: s_bare
+            scrollable: false
+            x: 32
+            y: 248
+            width: 960
+            height: 336
+            layout:
+              type: grid
+              grid_rows: [FR(1), FR(1), FR(1)]
+              grid_columns: [FR(1), FR(1), FR(1)]
+              grid_cell_x_align: STRETCH
+              grid_cell_y_align: STRETCH
+              pad_row: 14
+              pad_column: 20
+            widgets:
+              - obj:
+                  id: foyer_card
+                  <<: *card
+                  grid_cell_row_pos: 0
+                  grid_cell_column_pos: 0
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.foyer_entry_chandelier
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F1793"}
+                    - label: {<<: *card_name, text: "Foyer"}
+                    - label: {<<: *card_value, id: foyer_value}
+                    - slider:
+                        <<: *card_slider
+                        id: foyer_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.foyer_entry_chandelier
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: family_card
+                  <<: *card
+                  grid_cell_row_pos: 0
+                  grid_cell_column_pos: 1
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.family_room_family_room_chandelier
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F1793"}
+                    - label: {<<: *card_name, text: "Family Room"}
+                    - label: {<<: *card_value, id: family_value}
+                    - slider:
+                        <<: *card_slider
+                        id: family_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.family_room_family_room_chandelier
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: dining_card
+                  <<: *card
+                  grid_cell_row_pos: 0
+                  grid_cell_column_pos: 2
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.dining_room_dining_room_chandelier
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F1793"}
+                    - label: {<<: *card_name, text: "Dining Room"}
+                    - label: {<<: *card_value, id: dining_value}
+                    - slider:
+                        <<: *card_slider
+                        id: dining_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.dining_room_dining_room_chandelier
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: overhead_card
+                  <<: *card
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 0
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.kitchen_kitchen_overhead
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F0769"}
+                    - label: {<<: *card_name, text: "Kitchen"}
+                    - label: {<<: *card_value, id: overhead_value}
+                    - slider:
+                        <<: *card_slider
+                        id: overhead_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.kitchen_kitchen_overhead
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: island_card
+                  <<: *card
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 1
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.kitchen_kitchen_island_pendant
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F0769"}
+                    - label: {<<: *card_name, text: "Island"}
+                    - label: {<<: *card_value, id: island_value}
+                    - slider:
+                        <<: *card_slider
+                        id: island_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.kitchen_kitchen_island_pendant
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: cabn_card
+                  <<: *card
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 0
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.kitchen_north_under_cabinet_dimmer
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F1051"}
+                    - label: {<<: *card_name, text: "Cabinet North"}
+                    - label: {<<: *card_value, id: cabn_value}
+                    - slider:
+                        <<: *card_slider
+                        id: cabn_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.kitchen_north_under_cabinet_dimmer
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: cabe_card
+                  <<: *card
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 1
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.kitchen_east_under_cabinet_dimmer
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F1051"}
+                    - label: {<<: *card_name, text: "Cabinet East"}
+                    - label: {<<: *card_value, id: cabe_value}
+                    - slider:
+                        <<: *card_slider
+                        id: cabe_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.kitchen_east_under_cabinet_dimmer
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: cabw_card
+                  <<: *card
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 2
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.kitchen_west_under_cabinet_dimmer
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F1051"}
+                    - label: {<<: *card_name, text: "Cabinet West"}
+                    - label: {<<: *card_value, id: cabw_value}
+                    - slider:
+                        <<: *card_slider
+                        id: cabw_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.kitchen_west_under_cabinet_dimmer
+                                brightness_pct: !lambda return (int) x;
+
+    # -------------------------------------------------- downstairs
+    - id: downstairs_page
+      styles: s_page
+      widgets:
+        - button: *back_button
+        - label:
+            text: Downstairs
+            text_font: f_title
+            align: TOP_MID
+            y: 28
+        - label:
+            id: downstairs_status
+            text: "--"
+            styles: s_muted
+            align: TOP_RIGHT
+            x: -88
+            y: 36
+
+        - obj:
+            styles: s_bare
+            scrollable: false
+            x: 32
+            y: 88
+            width: 960
+            height: 84
+            layout:
+              type: grid
+              grid_rows: [FR(1)]
+              grid_columns: [FR(1), FR(1), FR(1), FR(1)]
+              grid_cell_x_align: STRETCH
+              grid_cell_y_align: STRETCH
+              pad_column: 16
+            widgets:
+              - button:
+                  id: dn_3
+                  layout: *icon_over_label
+                  on_click:
+                    - script.execute: {id: downstairs_pick, mode: 3}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.downstairs_off}}
+                  widgets:
+                    - label: {text: "\U000F0425", text_font: f_icon}
+                    - label: {text: "Off"}
+              - button:
+                  id: dn_0
+                  layout: *icon_over_label
+                  on_click:
+                    - script.execute: {id: downstairs_pick, mode: 0}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.downstairs_morning}}
+                  widgets:
+                    - label: {text: "\U000F059C", text_font: f_icon}
+                    - label: {text: "Morning"}
+              - button:
+                  id: dn_2
+                  layout: *icon_over_label
+                  on_click:
+                    - script.execute: {id: downstairs_pick, mode: 2}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.downstairs_movie}}
+                  widgets:
+                    - label: {text: "\U000F0FCF", text_font: f_icon}
+                    - label: {text: "Movie"}
+              - button:
+                  id: dn_1
+                  layout: *icon_over_label
+                  on_click:
+                    - script.execute: {id: downstairs_pick, mode: 1}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.downstairs_full}}
+                  widgets:
+                    - label: {text: "\U000F00E0", text_font: f_icon}
+                    - label: {text: "Full"}
+
+        - obj:
+            styles: s_bare
+            scrollable: false
+            x: 32
+            y: 192
+            width: 960
+            height: 110
+            layout:
+              type: grid
+              grid_rows: [FR(1)]
+              grid_columns: [FR(1), FR(1), FR(1)]
+              grid_cell_x_align: STRETCH
+              grid_cell_y_align: STRETCH
+              pad_column: 20
+            widgets:
+              - obj:
+                  id: stairs_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.media_room_stairway_sconces
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F091D"}
+                    - label: {<<: *card_name, text: "Stairway"}
+                    - label: {<<: *card_value, id: stairs_value}
+                    - slider:
+                        <<: *card_slider
+                        id: stairs_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.media_room_stairway_sconces
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: bsmain_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.media_room_basement_overhead_main
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F0769"}
+                    - label: {<<: *card_name, text: "Main Overhead"}
+                    - label: {<<: *card_value, id: bsmain_value}
+                    - slider:
+                        <<: *card_slider
+                        id: bsmain_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.media_room_basement_overhead_main
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: bswest_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.media_room_basement_overhead_west
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F0769"}
+                    - label: {<<: *card_name, text: "West Overhead"}
+                    - label: {<<: *card_value, id: bswest_value}
+                    - slider:
+                        <<: *card_slider
+                        id: bswest_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.media_room_basement_overhead_west
+                                brightness_pct: !lambda return (int) x;
+
+        # Yamaha receiver
+        - obj:
+            id: yamaha_card
+            <<: *card
+            x: 32
+            y: 322
+            width: 960
+            height: 150
+            widgets:
+              - label: {<<: *card_icon, text: "\U000F093D"}
+              - label: {<<: *card_name, text: Receiver}
+              - label: {<<: *card_value, id: yamaha_status}
+              - obj:
+                  styles: s_bare
+                  scrollable: false
+                  align: BOTTOM_MID
+                  width: 100%
+                  height: 56
+                  layout:
+                    type: flex
+                    flex_flow: ROW
+                    flex_align_cross: CENTER
+                    flex_align_track: CENTER
+                    pad_column: 12
+                  widgets:
+                    - button:
+                        id: yamaha_power
+                        width: 64
+                        height: 56
+                        on_click:
+                          - homeassistant.action: {action: media_player.toggle, data: {entity_id: media_player.basement_wenatchee}}
+                        widgets:
+                          - label: {text: "\U000F0425", text_font: f_icon, align: CENTER}
+                    - button:
+                        id: yamaha_mute
+                        width: 64
+                        height: 56
+                        on_click:
+                          - homeassistant.action:
+                              action: media_player.volume_mute
+                              data:
+                                entity_id: media_player.basement_wenatchee
+                                is_volume_muted: !lambda |-
+                                  return std::string(id(yamaha_muted).state == "True" ? "false" : "true");
+                        widgets:
+                          - label: {text: "\U000F0581", text_font: f_icon, align: CENTER}
+                    - button:
+                        id: yamaha_down
+                        width: 64
+                        height: 56
+                        on_click:
+                          - script.execute: {id: yamaha_step, delta_db: -1}
+                        widgets:
+                          - label: {text: "\U000F0374", text_font: f_icon, align: CENTER}
+                    - slider:
+                        id: yamaha_slider
+                        flex_grow: 1
+                        height: 16
+                        min_value: -90          # -45 dB, in half-dB units
+                        max_value: -50          # -25 dB
+                        value: -90
+                        on_release:
+                          - lambda: id(yamaha_target) = (161 + x) / 161.0f;
+                          - homeassistant.action:
+                              action: media_player.volume_set
+                              data:
+                                entity_id: media_player.basement_wenatchee
+                                volume_level: !lambda return id(yamaha_target);
+                          - script.execute: yamaha_settle
+                    - button:
+                        id: yamaha_up
+                        width: 64
+                        height: 56
+                        on_click:
+                          - script.execute: {id: yamaha_step, delta_db: 1}
+                        widgets:
+                          - label: {text: "\U000F0415", text_font: f_icon, align: CENTER}
+
+    # -------------------------------------------------- outside
+    - id: outside_page
+      styles: s_page
+      widgets:
+        - button: *back_button
+        - label:
+            text: Outside
+            text_font: f_title
+            align: TOP_MID
+            y: 28
+        - label:
+            id: outside_status
+            text: "--"
+            styles: s_muted
+            align: TOP_RIGHT
+            x: -88
+            y: 36
+
+        - obj:
+            styles: s_bare
+            scrollable: false
+            x: 32
+            y: 92
+            width: 960
+            height: 96
+            layout:
+              type: grid
+              grid_rows: [FR(1)]
+              grid_columns: [FR(1), FR(1), FR(1)]
+              grid_cell_x_align: STRETCH
+              grid_cell_y_align: STRETCH
+              pad_column: 20
+            widgets:
+              - button:
+                  id: outside_off
+                  layout: *icon_beside_label
+                  on_click:
+                    - script.execute: {id: outside_pick, mode: 0}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.outside_off}}
+                  widgets:
+                    - label: {text: "\U000F0594", text_font: f_icon}
+                    - label: {text: "Off", text_font: f_title}
+              - button:
+                  id: outside_low
+                  layout: *icon_beside_label
+                  on_click:
+                    - script.execute: {id: outside_pick, mode: 1}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.outside_low}}
+                  widgets:
+                    - label: {text: "\U000F12BA", text_font: f_icon}
+                    - label: {text: "Low", text_font: f_title}
+              - button:
+                  id: outside_high
+                  layout: *icon_beside_label
+                  on_click:
+                    - script.execute: {id: outside_pick, mode: 2}
+                    - homeassistant.action: {action: scene.turn_on, data: {entity_id: scene.outside_high}}
+                  widgets:
+                    - label: {text: "\U000F1987", text_font: f_icon}
+                    - label: {text: "High", text_font: f_title}
+
+        - obj:
+            styles: s_bare
+            scrollable: false
+            x: 32
+            y: 208
+            width: 960
+            height: 372
+            layout:
+              type: grid
+              grid_rows: [FR(1), FR(1), FR(1)]
+              grid_columns: [FR(1), FR(1), FR(1)]
+              grid_cell_x_align: STRETCH
+              grid_cell_y_align: STRETCH
+              pad_row: 16
+              pad_column: 20
+            widgets:
+              - obj:
+                  id: deck_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.outside_deck_sconces
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F091D"}
+                    - label: {<<: *card_name, text: "Deck"}
+                    - label: {<<: *card_value, id: deck_value}
+                    - slider:
+                        <<: *card_slider
+                        id: deck_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.outside_deck_sconces
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: entry_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.foyer_entry_exterior_sconce
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F091D"}
+                    - label: {<<: *card_name, text: "Entry"}
+                    - label: {<<: *card_value, id: entry_value}
+                    - slider:
+                        <<: *card_slider
+                        id: entry_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.foyer_entry_exterior_sconce
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: garage_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.outside_garage_sconce
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F091D"}
+                    - label: {<<: *card_name, text: "Garage"}
+                    - label: {<<: *card_value, id: garage_value}
+                    - slider:
+                        <<: *card_slider
+                        id: garage_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.outside_garage_sconce
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: laundry_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.outside_laundry_door_sconce
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F091D"}
+                    - label: {<<: *card_name, text: "Laundry Door"}
+                    - label: {<<: *card_value, id: laundry_value}
+                    - slider:
+                        <<: *card_slider
+                        id: laundry_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.outside_laundry_door_sconce
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: hottub_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.outside_hot_tub_patio_sconce
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F091D"}
+                    - label: {<<: *card_name, text: "Hot Tub Patio"}
+                    - label: {<<: *card_value, id: hottub_value}
+                    - slider:
+                        <<: *card_slider
+                        id: hottub_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.outside_hot_tub_patio_sconce
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: bedpatio_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: light.toggle
+                        data:
+                          entity_id: light.outside_primary_bedroom_patio_sconce
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F091D"}
+                    - label: {<<: *card_name, text: "Bedroom Patio"}
+                    - label: {<<: *card_value, id: bedpatio_value}
+                    - slider:
+                        <<: *card_slider
+                        id: bedpatio_slider
+                        on_release:
+                          - homeassistant.action:
+                              action: light.turn_on
+                              data:
+                                entity_id: light.outside_primary_bedroom_patio_sconce
+                                brightness_pct: !lambda return (int) x;
+              - obj:
+                  id: party_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: homeassistant.toggle
+                        data:
+                          entity_id: switch.outside_patio_party_lights
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F12BA"}
+                    - label: {<<: *card_name, text: "Deck Party"}
+                    - label: {<<: *card_state, id: party_value}
+              - obj:
+                  id: sideflood_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: homeassistant.toggle
+                        data:
+                          entity_id: light.garage_garage_flood_lights
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F1987"}
+                    - label: {<<: *card_name, text: "Side Door Flood"}
+                    - label: {<<: *card_state, id: sideflood_value}
+              - obj:
+                  id: driveflood_card
+                  <<: *card
+                  on_click:
+                    - homeassistant.action:
+                        action: homeassistant.toggle
+                        data:
+                          entity_id: light.outside_garage_driveway_flood
+                  widgets:
+                    - label: {<<: *card_icon, text: "\U000F1987"}
+                    - label: {<<: *card_name, text: "Driveway Flood"}
+                    - label: {<<: *card_state, id: driveflood_value}

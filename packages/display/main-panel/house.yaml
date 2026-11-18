@@ -1,0 +1,83 @@
+# Main panel - House tile: locks, garage doors and house scripts.
+
+globals:
+  - id: house_secure
+    type: bool
+    initial_value: "false"
+  - id: house_text
+    type: std::string
+
+text_sensor:
+  # House tile: is everything locked and closed?
+  - platform: homeassistant
+    id: deadbolt_state
+    entity_id: lock.garage_garage_deadbolt
+    internal: true
+    on_value:
+      - script.execute: house_refresh
+
+  - platform: homeassistant
+    id: gd_east_state
+    entity_id: cover.garage_door_east_door
+    internal: true
+    on_value:
+      - script.execute: house_refresh
+
+  - platform: homeassistant
+    id: gd_middle_state
+    entity_id: cover.garage_door_middle_door
+    internal: true
+    on_value:
+      - script.execute: house_refresh
+
+  - platform: homeassistant
+    id: gd_west_state
+    entity_id: cover.garage_door_west_door
+    internal: true
+    on_value:
+      - script.execute: house_refresh
+
+script:
+  - id: house_refresh
+    then:
+      - lambda: |-
+          const std::string lk = id(deadbolt_state).state;
+          int open = 0, unknown = 0;   // opening/closing count as open
+          for (auto *d : {id(gd_east_state), id(gd_middle_state), id(gd_west_state)}) {
+            if (d->state == "closed") continue;
+            if (d->state == "open" || d->state == "opening" || d->state == "closing") open++;
+            else unknown++;
+          }
+          id(house_secure) = lk == "locked" && open == 0 && unknown == 0;
+          std::string t;
+          if (id(house_secure)) t = "Locked · garage doors closed";
+          else {
+            t = lk == "locked" ? "Deadbolt locked" : "Deadbolt " + (lk.empty() ? std::string("unknown") : lk);
+            if (open) t += str_sprintf(" · %d garage %s", open, open == 1 ? "door open" : "doors open");
+            if (unknown) t += str_sprintf(" · %d garage %s", unknown, unknown == 1 ? "door unavailable" : "doors unavailable");
+          }
+          id(house_text) = t;
+      - lvgl.label.update:
+          id: home_house_status
+          text: !lambda return id(house_text);
+      - lvgl.label.update:
+          id: house_icon
+          text: !lambda |-
+            return std::string(id(house_secure) ? "\U000F08EB" : "\U000F08EC");
+      - lvgl.widget.update:
+          id: [tile_house, tile_house_hd]
+          state:
+            checked: !lambda return !id(house_secure);
+
+  # Tap feedback for a house script; the real status returns as the lock
+  # and doors report in, or after 20 s if nothing needed to change.
+  - id: house_busy
+    mode: restart
+    parameters:
+      msg: std::string
+    then:
+      - lvgl.label.update:
+          id: home_house_status
+          text: !lambda return msg + "…";
+      - delay: 20s
+      - script.execute: house_refresh

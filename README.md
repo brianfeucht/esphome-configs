@@ -42,3 +42,5 @@ packages:
 - **`packages/audio/hifi-esp32-s3.yaml`** - Sonocotta HiFi-ESP32-S3 Sendspin player (Leavenworth)
 - **`packages/audio/louder-plus-s3.yaml`** - Sonocotta Louder-ESP32-S3-Plus amp for a passive speaker (Leavenworth)
 - **`packages/propane/propane-monitor.yaml`** - Propane tank level from the tank sensor's BLE advertisements (Leavenworth)
+- **`packages/display/crowpanel-p4-101.yaml`** - Elecrow CrowPanel Advanced 10.1" ESP32-P4 hardware (MIPI-DSI panel, touch, backlight, C6 Wi-Fi)
+- **`packages/display/main-panel/`** - Leavenworth main room wall panel UI, one package per area (requires crowpanel-p4-101)

@@ -1,0 +1,95 @@
+# ============================================================
+# Main room wall panel - CrowPanel Advanced 10.1" (ESP32-P4)
+# ============================================================
+# Home screen is an overview: one tile per area, showing its state at a
+# glance with one-tap quick actions. Tapping a tile opens that area's
+# page with per-device control.
+#
+# Packages (import all of them, plus display/crowpanel-p4-101.yaml):
+#   core.yaml     logging, HA connection, clock, wake on touch
+#   theme.yaml    palette substitutions and fonts
+#   ui.yaml       shared widget pieces and every LVGL page
+#   outside.yaml, upstairs.yaml, downstairs.yaml, house.yaml, weather.yaml
+#                 each area's globals, HA entities and scripts
+#
+# Adding an area: a new area package with its entities (copy an existing
+# dimmer or switch block) and a *_refresh script that summarises them,
+# then a tile in home_tiles and a page with a card per device in ui.yaml.
+# Every device uses one uid across its entity id (<uid>_bri / <uid>_on)
+# and its widgets (<uid>_card, <uid>_value, <uid>_slider).
+# Repeated widget pieces (card parts, tile frame, back button) are YAML
+# anchors in ui.yaml's .widgets block. Anchors don't cross files, so the
+# pages stay in ui.yaml with them.
+#
+# Required substitutions: name, friendly_name.
+# The device sets api encryption, ota and wifi.
+# HA side: the ESPHome integration must have "Allow the device to
+# perform Home Assistant actions" turned on, or every tap is dropped.
+# ============================================================
+
+# ============================================================
+# Network and Home Assistant
+# ============================================================
+api:
+  # Keep the screen up through an HA outage; the default reboots every 15 min.
+  reboot_timeout: 0s
+
+logger:
+  level: INFO
+  hardware_uart: UART0
+  logs:
+    homeassistant.sensor: ERROR   # every off light reports brightness "None"
+
+time:
+  - platform: homeassistant
+    id: ha_time
+    on_time_sync:
+      - script.execute: clock_refresh
+    on_time:
+      - seconds: 0
+        then:
+          - script.execute: clock_refresh
+
+# Offline badge tracks HA itself, not any API client: an `esphome logs`
+# session connecting or leaving must not flip it.
+interval:
+  - interval: 2s
+    then:
+      - if:
+          condition:
+            api.connected:
+              state_subscription_only: true
+          then:
+            - lvgl.widget.hide: ha_offline
+          else:
+            - lvgl.widget.show: ha_offline
+
+script:
+  - id: clock_refresh
+    then:
+      - lvgl.label.update:
+          id: clock_time
+          text: !lambda |-
+            auto t = id(ha_time).now();
+            int h = t.hour % 12 == 0 ? 12 : t.hour % 12;
+            return str_sprintf("%d:%02d %s", h, t.minute, t.hour < 12 ? "AM" : "PM");
+      - lvgl.label.update:
+          id: clock_date
+          text: !lambda |-
+            auto t = id(ha_time).now();
+            return t.strftime("%A, %B ") + to_string(t.day_of_month);
+
+  # Any touch brightens a dimmed (or HA-switched-off) screen; the touch
+  # still does its job.
+  - id: wake
+    then:
+      - if:
+          condition:
+            lambda: |-
+              const auto &v = id(backlight).remote_values;
+              return !v.is_on() || v.get_brightness() < 1.0f;
+          then:
+            - light.turn_on:
+                id: backlight
+                brightness: 100%
+                transition_length: 150ms

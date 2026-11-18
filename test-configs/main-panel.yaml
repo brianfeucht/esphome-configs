@@ -1,0 +1,28 @@
+# Test configuration for the main room wall panel - local package imports
+substitutions:
+  name: main-panel-test
+  friendly_name: Main Panel Test
+
+packages:
+  board: !include ../packages/display/crowpanel-p4-101.yaml
+  core: !include ../packages/display/main-panel/core.yaml
+  theme: !include ../packages/display/main-panel/theme.yaml
+  outside: !include ../packages/display/main-panel/outside.yaml
+  upstairs: !include ../packages/display/main-panel/upstairs.yaml
+  downstairs: !include ../packages/display/main-panel/downstairs.yaml
+  house: !include ../packages/display/main-panel/house.yaml
+  weather: !include ../packages/display/main-panel/weather.yaml
+  ui: !include ../packages/display/main-panel/ui.yaml
+
+# Real devices set their own key; encrypted OTA needs one to inherit.
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    encryption:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password

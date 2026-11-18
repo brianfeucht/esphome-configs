@@ -1,0 +1,247 @@
+# Main panel - Downstairs: scenes, the Yamaha receiver, HA entities and scripts.
+
+globals:
+  - id: downstairs_mode  # 0 morning, 1 full, 2 movie, 3 off, 4 custom
+    type: int
+    initial_value: "-1"
+  - id: downstairs_on
+    type: int
+    initial_value: "0"
+  - id: yamaha_target
+    type: float
+    initial_value: "0"
+  - id: downstairs_hold
+    type: int
+    initial_value: "-1"
+  - id: yamaha_hold      # a volume change is in flight; step from yamaha_target
+    type: bool
+    initial_value: "false"
+
+sensor:
+  # ---- Downstairs: keep in step with tools/panel_scenes.py ----
+  - platform: homeassistant
+    id: stairs_bri
+    entity_id: light.media_room_stairway_sconces
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: stairs_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: stairs_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: stairs_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: downstairs_refresh
+
+  - platform: homeassistant
+    id: bsmain_bri
+    entity_id: light.media_room_basement_overhead_main
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: bsmain_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: bsmain_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: bsmain_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: downstairs_refresh
+
+  - platform: homeassistant
+    id: bswest_bri
+    entity_id: light.media_room_basement_overhead_west
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: bswest_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: bswest_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: bswest_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: downstairs_refresh
+  # ---- Yamaha TSR-7850 receiver (Downstairs page) ----
+  - platform: homeassistant
+    id: yamaha_vol
+    entity_id: media_player.basement_wenatchee
+    attribute: volume_level
+    internal: true
+    on_value:
+      - script.execute: yamaha_refresh
+
+text_sensor:
+  - platform: homeassistant
+    id: yamaha_state
+    entity_id: media_player.basement_wenatchee
+    internal: true
+    on_value:
+      - script.execute: yamaha_refresh
+  - platform: homeassistant
+    id: yamaha_muted
+    entity_id: media_player.basement_wenatchee
+    attribute: is_volume_muted
+    internal: true
+    on_value:
+      - script.execute: yamaha_refresh
+  - platform: homeassistant
+    id: yamaha_source
+    entity_id: media_player.basement_wenatchee
+    attribute: source
+    internal: true
+    on_value:
+      - script.execute: yamaha_refresh
+
+script:
+  # Which Downstairs scene the lights match (tools/panel_scenes.py
+  # DOWNSTAIRS_LEVELS), same 5-point rule as Upstairs.
+  - id: downstairs_refresh
+    then:
+      - lambda: |-
+          //                    stairs main west
+          static const uint8_t L[3][3] = {
+            { 40, 40, 30},   // Morning
+            {100,100,100},   // Full
+            {  5,  0,  5},   // Movie
+          };
+          const float bri[3] = {id(stairs_bri).state, id(bsmain_bri).state, id(bswest_bri).state};
+          int pct[3], on = 0;
+          for (int i = 0; i < 3; i++) {
+            pct[i] = (std::isnan(bri[i]) || bri[i] <= 0) ? 0 : (int) roundf(bri[i] * 100.0f / 255.0f);
+            if (pct[i] > 0) on++;
+          }
+          int mode = 4;
+          if (on == 0) mode = 3;
+          else for (int s = 0; s < 3 && mode == 4; s++) {
+            bool match = true;
+            for (int i = 0; i < 3 && match; i++)
+              match = L[s][i] == 0 ? pct[i] == 0 : (pct[i] > 0 && abs(pct[i] - L[s][i]) <= 5);
+            if (match) mode = s;
+          }
+          if (id(downstairs_hold) >= 0) mode = id(downstairs_hold);
+          id(downstairs_mode) = mode;
+          id(downstairs_on) = on;
+      - lvgl.label.update:
+          id: [home_downstairs_status, downstairs_status]
+          text: !lambda |-
+            if (id(downstairs_on) == 0) return std::string("All off");
+            return str_sprintf("%s%d of 3 on", id(downstairs_mode) == 4 ? "Custom · " : "", id(downstairs_on));
+      - lvgl.widget.update:
+          id: [tile_downstairs, tile_downstairs_hd]
+          state:
+            checked: !lambda return id(downstairs_on) > 0;
+      - lvgl.widget.update:
+          id: [home_dn_0, dn_0]
+          state:
+            checked: !lambda return id(downstairs_mode) == 0;
+      - lvgl.widget.update:
+          id: [home_dn_1, dn_1]
+          state:
+            checked: !lambda return id(downstairs_mode) == 1;
+      - lvgl.widget.update:
+          id: [home_dn_2, dn_2]
+          state:
+            checked: !lambda return id(downstairs_mode) == 2;
+      - lvgl.widget.update:
+          id: [home_dn_3, dn_3]
+          state:
+            checked: !lambda return id(downstairs_mode) == 3;
+
+  - id: downstairs_pick
+    mode: restart
+    parameters:
+      mode: int
+    then:
+      - lambda: id(downstairs_hold) = mode;
+      - script.execute: downstairs_refresh
+      - delay: 6s
+      - lambda: id(downstairs_hold) = -1;
+      - script.execute: downstairs_refresh
+
+  - id: yamaha_refresh
+    then:
+      - lvgl.label.update:
+          id: yamaha_status
+          text: !lambda |-
+            const std::string &st = id(yamaha_state).state;
+            if (st.empty() || st == "off" || st == "unavailable" || st == "unknown")
+              return std::string(st == "unavailable" ? "Unavailable" : "Off");
+            std::string t = st;
+            t[0] = toupper(t[0]);
+            const std::string &src = id(yamaha_source).state;
+            if (!src.empty() && src != "None") t += " · " + src;
+            if (id(yamaha_muted).state == "True") t += " · Muted";
+            else if (!std::isnan(id(yamaha_vol).state))
+              t += str_sprintf(" · %.1f dB", roundf(id(yamaha_vol).state * 161) * 0.5f - 80.5f);
+            return t;
+      - if:
+          condition:
+            lambda: return !id(yamaha_hold) && !std::isnan(id(yamaha_vol).state);
+          then:
+            - lvgl.slider.update:
+                id: yamaha_slider
+                value: !lambda return roundf(id(yamaha_vol).state * 161) - 161;
+      - lvgl.widget.update:
+          id: [yamaha_card, yamaha_power]
+          state:
+            checked: !lambda |-
+              const std::string &st = id(yamaha_state).state;
+              return !(st.empty() || st == "off" || st == "unavailable" || st == "unknown");
+      - lvgl.widget.update:
+          id: yamaha_mute
+          state:
+            checked: !lambda return id(yamaha_muted).state == "True";
+
+  # The receiver's volume is a step 0-161 (0.5 dB each, -80.5..0 dB) and HA's
+  # volume_level is step / 161, so step = 161 + 2 * dB. Slider and buttons
+  # work in half-dB units (2 * dB); the panel never goes above -25 dB, and the
+  # slider covers -45..-25 dB.
+  - id: yamaha_step
+    parameters:
+      delta_db: float
+    then:
+      - lambda: |-
+          // Mid-change, HA's value is stale: step from what we last sent so
+          // quick taps add up.
+          const float cur = id(yamaha_hold) ? id(yamaha_target) : id(yamaha_vol).state;
+          float step = std::isnan(cur) ? 71 : roundf(cur * 161);
+          step = std::max(0.0f, std::min(111.0f, step + 2 * delta_db));   // 111 = -25 dB
+          id(yamaha_target) = step / 161.0f;
+      - lvgl.slider.update:
+          id: yamaha_slider
+          value: !lambda return roundf(id(yamaha_target) * 161) - 161;
+      - homeassistant.action:
+          action: media_player.volume_set
+          data:
+            entity_id: media_player.basement_wenatchee
+            volume_level: !lambda return id(yamaha_target);
+      - script.execute: yamaha_settle
+
+  # Holds the slider on the sent volume until the receiver catches up.
+  - id: yamaha_settle
+    mode: restart
+    then:
+      - lambda: id(yamaha_hold) = true;
+      - delay: 3s
+      - lambda: id(yamaha_hold) = false;
+      - script.execute: yamaha_refresh

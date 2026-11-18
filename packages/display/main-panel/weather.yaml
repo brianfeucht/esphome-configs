@@ -1,0 +1,131 @@
+# Main panel - Weather beside the clock: Tempest now and the forecast helpers.
+
+sensor:
+  # ---- Weather (Tempest via tools/weather_forecast.py) ----
+  - platform: homeassistant
+    id: wx_now
+    entity_id: weather.leavenworth
+    attribute: temperature
+    internal: true
+    on_value:
+      - script.execute: weather_refresh
+  - platform: homeassistant
+    id: wx_high
+    entity_id: input_number.forecast_today_high
+    internal: true
+    on_value:
+      - script.execute: weather_refresh
+  - platform: homeassistant
+    id: wx_low
+    entity_id: input_number.forecast_today_low
+    internal: true
+    on_value:
+      - script.execute: weather_refresh
+  - platform: homeassistant
+    id: wx_precip
+    entity_id: input_number.forecast_today_precipitation
+    internal: true
+    on_value:
+      - script.execute: weather_refresh
+  - platform: homeassistant
+    id: wxt_high
+    entity_id: input_number.forecast_tomorrow_high
+    internal: true
+    on_value:
+      - script.execute: weather_refresh
+  - platform: homeassistant
+    id: wxt_low
+    entity_id: input_number.forecast_tomorrow_low
+    internal: true
+    on_value:
+      - script.execute: weather_refresh
+  - platform: homeassistant
+    id: wxt_precip
+    entity_id: input_number.forecast_tomorrow_precipitation
+    internal: true
+    on_value:
+      - script.execute: weather_refresh
+
+text_sensor:
+  - platform: homeassistant
+    id: wx_cond
+    entity_id: input_text.forecast_today_condition
+    internal: true
+    on_value:
+      - script.execute: weather_refresh
+  - platform: homeassistant
+    id: wxt_cond
+    entity_id: input_text.forecast_tomorrow_condition
+    internal: true
+    on_value:
+      - script.execute: weather_refresh
+
+script:
+  # Today's forecast beside the clock.
+  - id: weather_refresh
+    then:
+      - lvgl.label.update:
+          id: wx_icon
+          text: !lambda |-
+            const std::string &c = id(wx_cond).state;
+            if (c == "sunny") return std::string("\U000F0599");
+            if (c == "clear-night") return std::string("\U000F0594");
+            if (c == "partlycloudy") return std::string("\U000F0595");
+            if (c == "cloudy") return std::string("\U000F0590");
+            if (c == "fog") return std::string("\U000F0591");
+            if (c == "rainy") return std::string("\U000F0597");
+            if (c == "pouring") return std::string("\U000F0596");
+            if (c == "lightning") return std::string("\U000F0593");
+            if (c == "lightning-rainy") return std::string("\U000F067E");
+            if (c == "snowy") return std::string("\U000F0598");
+            if (c == "snowy-rainy") return std::string("\U000F067F");
+            if (c == "hail") return std::string("\U000F0592");
+            if (c == "windy") return std::string("\U000F059D");
+            if (c == "windy-variant") return std::string("\U000F059E");
+            if (c == "exceptional") return std::string("\U000F05D6");
+            return std::string("");
+      - lvgl.label.update:
+          id: wx_temp
+          text: !lambda |-
+            if (std::isnan(id(wx_now).state)) return std::string("--°");
+            return str_sprintf("%d°", (int) roundf(id(wx_now).state));
+      - lvgl.label.update:
+          id: wx_line
+          text: !lambda |-
+            // The icon carries the conditions; the line is high/low and rain chance.
+            std::string t;
+            if (!std::isnan(id(wx_high).state) && !std::isnan(id(wx_low).state))
+              t = str_sprintf("%d° / %d°", (int) roundf(id(wx_high).state), (int) roundf(id(wx_low).state));
+            if (!std::isnan(id(wx_precip).state) && id(wx_precip).state > 0)
+              t += str_sprintf("%s\U000F058C%d%%", t.empty() ? "" : "   ", (int) roundf(id(wx_precip).state));
+            return t;
+      - lvgl.label.update:
+          id: wxt_icon
+          text: !lambda |-
+            const std::string &c = id(wxt_cond).state;
+            if (c == "sunny") return std::string("\U000F0599");
+            if (c == "clear-night") return std::string("\U000F0594");
+            if (c == "partlycloudy") return std::string("\U000F0595");
+            if (c == "cloudy") return std::string("\U000F0590");
+            if (c == "fog") return std::string("\U000F0591");
+            if (c == "rainy") return std::string("\U000F0597");
+            if (c == "pouring") return std::string("\U000F0596");
+            if (c == "lightning") return std::string("\U000F0593");
+            if (c == "lightning-rainy") return std::string("\U000F067E");
+            if (c == "snowy") return std::string("\U000F0598");
+            if (c == "snowy-rainy") return std::string("\U000F067F");
+            if (c == "hail") return std::string("\U000F0592");
+            if (c == "windy") return std::string("\U000F059D");
+            if (c == "windy-variant") return std::string("\U000F059E");
+            if (c == "exceptional") return std::string("\U000F05D6");
+            return std::string("");
+      - lvgl.label.update:
+          id: wxt_temps
+          text: !lambda |-
+            if (std::isnan(id(wxt_high).state) || std::isnan(id(wxt_low).state)) return std::string("--");
+            return str_sprintf("%d° / %d°", (int) roundf(id(wxt_high).state), (int) roundf(id(wxt_low).state));
+      - lvgl.label.update:
+          id: wxt_line
+          text: !lambda |-
+            if (std::isnan(id(wxt_precip).state) || id(wxt_precip).state <= 0) return std::string("");
+            return str_sprintf("\U000F058C%d%%", (int) roundf(id(wxt_precip).state));
