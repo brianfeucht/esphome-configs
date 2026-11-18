@@ -1,0 +1,110 @@
+# Main panel - theme: palette substitutions and fonts.
+
+substitutions:
+  # ---- Theme palette ----
+  c_bg: "0x0B0E13"          # page
+  c_surface: "0x161B22"     # tiles, cards
+  c_raised: "0x222A35"      # chips, slider track, pressed tiles
+  c_text: "0xE6EAF0"
+  c_muted: "0x8B95A5"
+  c_accent: "0xF4B740"      # lit / active
+  c_accent_ink: "0x1C1404"  # text on accent
+  c_lit: "0x2A2212"         # card background while lit
+  c_lit_edge: "0x5C4720"    # card border while lit
+  c_pressed: "0x2F3947"     # button while pressed
+  c_warn: "0xE5534B"
+
+# ============================================================
+# Theme: dark, low-glare; one warm accent that means "this is on".
+# Anything lit, or the active choice, goes amber.
+# ============================================================
+font:
+  - id: f_clock
+    file: "gfonts://Inter@300"
+    size: 76
+    bpp: 4
+    glyphs: "0123456789: APM°-"
+  - id: f_title
+    file: "gfonts://Inter@600"
+    size: 30
+    bpp: 4
+  - id: f_body
+    file: "gfonts://Inter@500"
+    size: 22
+    bpp: 4
+    glyphsets: [GF_Latin_Kernel]
+    glyphs: "·°"
+    extras:                  # inline rain-chance droplet
+      - file: "https://github.com/Templarian/MaterialDesign-Webfont/raw/v7.4.47/fonts/materialdesignicons-webfont.ttf"
+        glyphs: ["\U000F058C"]
+  - id: f_small
+    file: "gfonts://Inter@500"
+    size: 18
+    bpp: 4
+    glyphsets: [GF_Latin_Kernel]
+    glyphs: "·°"
+    extras:                  # inline rain-chance droplet
+      - file: "https://github.com/Templarian/MaterialDesign-Webfont/raw/v7.4.47/fonts/materialdesignicons-webfont.ttf"
+        glyphs: ["\U000F058C"]
+
+  # Material Design Icons, pinned to a release so builds don't drift. Add a
+  # codepoint here before using it; look them up in the same tag's
+  # scss/_variables.scss.
+  - id: f_icon
+    file: "https://github.com/Templarian/MaterialDesign-Webfont/raw/v7.4.47/fonts/materialdesignicons-webfont.ttf"
+    size: 36
+    bpp: 4
+    glyphs: &mdi
+      - "\U000F0141"  # chevron-left
+      - "\U000F0142"  # chevron-right
+      - "\U000F0594"  # weather-night      (Off)
+      - "\U000F12BA"  # string-lights      (Low, party)
+      - "\U000F1987"  # light-flood-down   (High, floods)
+      - "\U000F091D"  # wall-sconce-flat
+      - "\U000F1054"  # outdoor-lamp
+      - "\U000F05AA"  # wifi-off
+      - "\U000F156D"  # sofa-outline       (Upstairs tile)
+      - "\U000F059C"  # weather-sunset-up  (Wakeup)
+      - "\U000F06CA"  # coffee-outline     (Morning)
+      - "\U000F0595"  # weather-partly-cloudy (Afternoon)
+      - "\U000F00E0"  # brightness-7       (Full)
+      - "\U000F059B"  # weather-sunset-down (Evening)
+      - "\U000F0425"  # power              (Off)
+      - "\U000F1793"  # chandelier
+      - "\U000F0769"  # ceiling-light
+      - "\U000F1051"  # led-strip-variant  (under-cabinet)
+      - "\U000F12BE"  # stairs-down        (Downstairs tile)
+      - "\U000F0FCF"  # movie-open-outline (Movie)
+      - "\U000F08EB"  # home-lock          (House, secure)
+      - "\U000F08EC"  # home-lock-open     (House, not secure)
+      - "\U000F093D"  # audio-video        (receiver)
+      - "\U000F0581"  # volume-off
+      - "\U000F0374"  # minus
+      - "\U000F0415"  # plus
+
+  - id: f_wx                 # weather condition icons, sized to the clock
+    file: "https://github.com/Templarian/MaterialDesign-Webfont/raw/v7.4.47/fonts/materialdesignicons-webfont.ttf"
+    size: 72
+    bpp: 4
+    glyphs: &wx
+      - "\U000F0599"  # sunny
+      - "\U000F0594"  # clear-night
+      - "\U000F0595"  # partlycloudy
+      - "\U000F0590"  # cloudy
+      - "\U000F0591"  # fog
+      - "\U000F0597"  # rainy
+      - "\U000F0596"  # pouring
+      - "\U000F0593"  # lightning
+      - "\U000F067E"  # lightning-rainy
+      - "\U000F0598"  # snowy
+      - "\U000F067F"  # snowy-rainy
+      - "\U000F0592"  # hail
+      - "\U000F059D"  # windy
+      - "\U000F059E"  # windy-variant
+      - "\U000F05D6"  # exceptional
+
+  - id: f_wx_md              # tomorrow's icon
+    file: "https://github.com/Templarian/MaterialDesign-Webfont/raw/v7.4.47/fonts/materialdesignicons-webfont.ttf"
+    size: 44
+    bpp: 4
+    glyphs: *wx

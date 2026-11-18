@@ -1,0 +1,262 @@
+# Main panel - Outside: scene state, HA entities and scripts.
+
+globals:
+  - id: outside_mode     # 0 off, 1 low, 2 high, 3 custom
+    type: int
+    initial_value: "-1"
+  - id: outside_on       # fixtures currently on
+    type: int
+    initial_value: "0"
+
+  # Scene just tapped, held on the buttons while the lights report in one
+  # by one (else the half-changed room matches nothing and the button
+  # flickers off). -1 = no hold. See *_pick.
+  - id: outside_hold
+    type: int
+    initial_value: "-1"
+
+# ============================================================
+# HA entities mirrored onto the cards
+# Outside: keep in step with tools/panel_scenes.py
+# ============================================================
+# HA reports no brightness while a light is off, which arrives as NaN.
+sensor:
+  - platform: homeassistant
+    id: deck_bri
+    entity_id: light.outside_deck_sconces
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: deck_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: deck_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: deck_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: outside_refresh
+
+  - platform: homeassistant
+    id: entry_bri
+    entity_id: light.foyer_entry_exterior_sconce
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: entry_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: entry_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: entry_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: outside_refresh
+
+  - platform: homeassistant
+    id: garage_bri
+    entity_id: light.outside_garage_sconce
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: garage_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: garage_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: garage_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: outside_refresh
+
+  - platform: homeassistant
+    id: laundry_bri
+    entity_id: light.outside_laundry_door_sconce
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: laundry_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: laundry_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: laundry_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: outside_refresh
+
+  - platform: homeassistant
+    id: hottub_bri
+    entity_id: light.outside_hot_tub_patio_sconce
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: hottub_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: hottub_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: hottub_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: outside_refresh
+
+  - platform: homeassistant
+    id: bedpatio_bri
+    entity_id: light.outside_primary_bedroom_patio_sconce
+    attribute: brightness
+    internal: true
+    on_value:
+      - lvgl.slider.update:
+          id: bedpatio_slider
+          value: !lambda |-
+            return std::isnan(x) ? 0 : roundf(x * 100.0f / 255.0f);
+      - lvgl.label.update:
+          id: bedpatio_value
+          text: !lambda |-
+            if (std::isnan(x) || x <= 0) return std::string("Off");
+            return str_sprintf("%d%%", (int) roundf(x * 100.0f / 255.0f));
+      - lvgl.widget.update:
+          id: bedpatio_card
+          state:
+            checked: !lambda return !std::isnan(x) && x > 0;
+      - script.execute: outside_refresh
+
+binary_sensor:
+  - platform: homeassistant
+    id: party_on
+    entity_id: switch.outside_patio_party_lights
+    internal: true
+    trigger_on_initial_state: true   # else the first state from HA never draws
+    on_state:
+      - lvgl.label.update:
+          id: party_value
+          text: !lambda |-
+            return std::string(x ? "On" : "Off");
+      - lvgl.widget.update:
+          id: party_card
+          state:
+            checked: !lambda return x;
+      - script.execute: outside_refresh
+
+  - platform: homeassistant
+    id: sideflood_on
+    entity_id: light.garage_garage_flood_lights
+    internal: true
+    trigger_on_initial_state: true   # else the first state from HA never draws
+    on_state:
+      - lvgl.label.update:
+          id: sideflood_value
+          text: !lambda |-
+            return std::string(x ? "On" : "Off");
+      - lvgl.widget.update:
+          id: sideflood_card
+          state:
+            checked: !lambda return x;
+      - script.execute: outside_refresh
+
+  - platform: homeassistant
+    id: driveflood_on
+    entity_id: light.outside_garage_driveway_flood
+    internal: true
+    trigger_on_initial_state: true   # else the first state from HA never draws
+    on_state:
+      - lvgl.label.update:
+          id: driveflood_value
+          text: !lambda |-
+            return std::string(x ? "On" : "Off");
+      - lvgl.widget.update:
+          id: driveflood_card
+          state:
+            checked: !lambda return x;
+      - script.execute: outside_refresh
+
+script:
+  # Which scene the yard matches. Low/High match on brightness bands
+  # because Z-Wave dimmers round 128 to 129 and 255 to 252-255.
+  - id: outside_refresh
+    then:
+      - lambda: |-
+          const float sconces[] = {
+            id(deck_bri).state, id(entry_bri).state, id(garage_bri).state,
+            id(laundry_bri).state, id(hottub_bri).state, id(bedpatio_bri).state,
+          };
+          int on = 0, low = 0, high = 0;
+          for (float b : sconces) {
+            if (std::isnan(b) || b <= 0) continue;
+            on++;
+            if (b >= 100 && b <= 160) low++;
+            if (b >= 230) high++;
+          }
+          const int floods = id(sideflood_on).state + id(driveflood_on).state;
+          const bool party = id(party_on).state;
+          on += floods + party;
+
+          int mode = 3;
+          if (on == 0) mode = 0;
+          else if (low == 6 && floods == 0 && party) mode = 1;
+          else if (high == 6 && floods == 2 && party) mode = 2;
+          if (id(outside_hold) >= 0) mode = id(outside_hold);
+          id(outside_mode) = mode;
+          id(outside_on) = on;
+      - lvgl.label.update:
+          id: [home_outside_status, outside_status]
+          text: !lambda |-
+            // The highlighted button names the scene; only call out Custom.
+            if (id(outside_on) == 0) return std::string("All off");
+            return str_sprintf("%s%d of 9 on", id(outside_mode) == 3 ? "Custom · " : "", id(outside_on));
+      - lvgl.widget.update:
+          id: [tile_outside, tile_outside_hd]
+          state:
+            checked: !lambda return id(outside_on) > 0;
+      - lvgl.widget.update:
+          id: [home_off, outside_off]
+          state:
+            checked: !lambda return id(outside_mode) == 0;
+      - lvgl.widget.update:
+          id: [home_low, outside_low]
+          state:
+            checked: !lambda return id(outside_mode) == 1;
+      - lvgl.widget.update:
+          id: [home_high, outside_high]
+          state:
+            checked: !lambda return id(outside_mode) == 2;
+
+  # *_pick: highlight the tapped scene right away instead of waiting for
+  # the lights, and hold it for 6 s while they report in; the refresh
+  # after the hold corrects it if the room ended up elsewhere.
+  - id: outside_pick
+    mode: restart
+    parameters:
+      mode: int
+    then:
+      - lambda: id(outside_hold) = mode;
+      - script.execute: outside_refresh
+      - delay: 6s
+      - lambda: id(outside_hold) = -1;
+      - script.execute: outside_refresh

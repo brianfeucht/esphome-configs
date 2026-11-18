@@ -127,6 +127,13 @@ Sonocotta Louder-ESP32-S3-Plus (TAS5825M) driving a passive 2-way speaker, as a 
 
 **Required substitutions:** `name`, `friendly_name`
 
+#### `display/crowpanel-p4-101.yaml` and `display/main-panel/`
+The main room wall panel: a CrowPanel Advanced 10.1" (ESP32-P4) with an overview home screen and a page per area. Import the board package and every file in `display/main-panel/`; `core.yaml` describes each one and how to add an area. The LVGL pages all live in `ui.yaml` with the YAML anchors they share, since anchors don't cross files.
+
+**Required substitutions:** `name`, `friendly_name`
+
+**Dependencies:** In Home Assistant, enable "Allow the device to perform Home Assistant actions" for the device.
+
 #### `propane/propane-monitor.yaml`
 Propane level, sensor status and RSSI from the tank sensor's BLE advertisements. Scans actively and has no `bluetooth_proxy`, since the level only arrives in an active scan's response.
 
