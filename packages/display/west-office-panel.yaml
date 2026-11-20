@@ -2,7 +2,8 @@
 # Import with: packages:
 #   west_office_panel: github://brianfeucht/esphome-configs/packages/display/west-office-panel.yaml
 #
-# Dependencies: base.yaml, display/cyd-2432s028r.yaml
+# Dependencies: base.yaml, display/cyd-2432s028r.yaml, and a local sensor with id room_temperature in °C
+#   (display/cyd-sht40.yaml provides one).
 # Reads state from Home Assistant and calls HA actions: in HA, the ESPHome integration entry for this device
 # must have "Allow the device to perform Home Assistant actions" turned on.
 #
@@ -27,7 +28,7 @@
 #   Until HA has sent an occupancy state (e.g. right after boot) the panel stays at 100%.
 #
 # Optional substitutions (defaults are the West Office entities):
-#   downlight, chandelier, keylight, shade_left, shade_right, hvac, room_temp, co2, occupancy, still_energy, room_lux
+#   downlight, chandelier, keylight, shade_left, shade_right, hvac, co2, occupancy, still_energy, room_lux
 #   vacancy_delay, still_energy_min, dark_lux, bright_lux, min_tap_ms,
 #   hvac_step, hvac_min, hvac_max, hvac_send_delay, hvac_page_timeout
 
@@ -38,7 +39,6 @@ substitutions:
   shade_left: cover.west_office_left_shade_outbound_bottom
   shade_right: cover.brian_office_west_shade_right_outbound_bottom
   hvac: climate.hvac_westoffice_hvac_westoffice
-  room_temp: sensor.apollo_msr_2_151680_dps310_temperature
   co2: sensor.apollo_msr_2_151680_co2
   occupancy: binary_sensor.west_office_multisensor_radar_zone_occupancy
   still_energy: sensor.apollo_msr_2_151680_radar_still_energy
@@ -108,10 +108,14 @@ sensor:
           then:
             - lambda: id(hvac_target) = x;
             - script.execute: refresh_hvac
-  # Current temperature comes from the room multisensor, not the mini-split's return-air reading.
-  - platform: homeassistant
-    id: ha_room_temp
-    entity_id: ${room_temp}
+  # Current temperature is read locally (the panel's SHT40), not from the mini-split's return-air reading or the
+  # MSR-2's DPS310 (which drifts with its own self-heating). Converted to °F to match the HVAC setpoint from HA.
+  - platform: copy
+    id: room_temp_f
+    source_id: room_temperature
+    internal: true
+    filters:
+      - lambda: return x * 9.0f / 5.0f + 32.0f;
     on_value: { script.execute: refresh_hvac }
 
   - platform: homeassistant
@@ -297,7 +301,7 @@ script:
       - lvgl.label.update:
           id: lbl_hvac_current
           text: !lambda |-
-            float t = id(ha_room_temp).state;
+            float t = id(room_temp_f).state;
             return std::isnan(t) ? std::string("--°") : str_sprintf("%.0f°", t);
       - lvgl.label.update:
           id: lbl_hvac_target
@@ -315,7 +319,7 @@ script:
       - lvgl.label.update:
           id: lbl_hvac_page_room
           text: !lambda |-
-            float t = id(ha_room_temp).state;
+            float t = id(room_temp_f).state;
             return std::isnan(t) ? std::string("Room --°") : str_sprintf("Room %.0f°", t);
       - lvgl.widget.update:
           id: btn_hvac_mode_off

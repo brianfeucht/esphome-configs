@@ -1,0 +1,32 @@
+# Adafruit SHT40 temperature/humidity breakout on a CYD's CN1 connector
+# Import with: packages:
+#   cyd_sht40: github://brianfeucht/esphome-configs/packages/display/cyd-sht40.yaml
+#
+# Dependencies: display/cyd-2432s028r.yaml
+# Provides ids: room_temperature (°C), room_humidity (%).
+#
+# Wiring (CN1 is a 1.25mm JST; the SHT40's two STEMMA QT ports are interchangeable):
+#   CN1 GND  -> GND (black)
+#   CN1 3.3V -> VIN (red)
+#   CN1 IO27 -> SDA (blue)
+#   CN1 IO22 -> SCL (yellow)
+#   The pigtail's wire colors and order aren't standard: follow the CN1 silkscreen. "Communication failed" with
+#   the board's power LED on usually means SDA and SCL are swapped.
+# Keep the sensor outside the CYD enclosure: the ESP32 and backlight heat it several degrees.
+
+i2c:
+  - id: cn1_i2c
+    sda: GPIO27
+    scl: GPIO22
+    scan: true
+
+sensor:
+  - platform: sht4x
+    i2c_id: cn1_i2c
+    temperature:
+      id: room_temperature
+      name: "Temperature"
+    humidity:
+      id: room_humidity
+      name: "Humidity"
+    update_interval: 60s
