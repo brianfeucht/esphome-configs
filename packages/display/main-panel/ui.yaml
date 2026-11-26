@@ -571,7 +571,7 @@ lvgl:
                         layout:
                           type: grid
                           grid_rows: [FR(1)]
-                          grid_columns: [FR(1), FR(1), FR(1)]
+                          grid_columns: [FR(1), FR(1), FR(1), FR(1), FR(1)]
                           grid_cell_x_align: STRETCH
                           grid_cell_y_align: STRETCH
                           pad_row: 10
@@ -598,6 +598,23 @@ lvgl:
                               - homeassistant.action: {action: script.turn_on, data: {entity_id: script.house_lockup}}
                               widgets:
                                 - label: {text: "Lock Up", align: CENTER}
+                          # Toggles, amber while on. Flip at once; HA's state follows.
+                          - button:
+                              id: house_fire
+                              on_click:
+                              - lvgl.widget.update:
+                                  id: house_fire
+                                  state:
+                                    checked: !lambda return !lv_obj_has_state(id(house_fire), LV_STATE_CHECKED);
+                              - homeassistant.action: {action: switch.toggle, data: {entity_id: switch.upstairs_fireplace_fireplace}}
+                              widgets:
+                                - label: {text: "Fireplace", align: CENTER}
+                          - button:
+                              id: house_plugs
+                              on_click:
+                              - script.execute: plug_lights_toggle
+                              widgets:
+                                - label: {text: "Plug Lights", align: CENTER}
 
     # -------------------------------------------------- upstairs
     - id: upstairs_page
