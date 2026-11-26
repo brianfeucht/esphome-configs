@@ -1,4 +1,5 @@
-# Main panel - House tile: locks, garage doors and house scripts.
+# Main panel - House tile: locks, garage doors, house scripts, the
+# fireplace and the indoor plug lights.
 
 globals:
   - id: house_secure
@@ -36,6 +37,45 @@ text_sensor:
     internal: true
     on_value:
       - script.execute: house_refresh
+
+  # Fireplace and plug-light toggles: lit while on.
+  - platform: homeassistant
+    id: fireplace_state
+    entity_id: switch.upstairs_fireplace_fireplace
+    internal: true
+    on_value:
+      - lvgl.widget.update:
+          id: house_fire
+          state:
+            checked: !lambda return x == "on";
+
+  - platform: homeassistant
+    id: plug_07730_state
+    entity_id: switch.indoor_plug_07730
+    internal: true
+    on_value:
+      - script.execute: plugs_refresh
+
+  - platform: homeassistant
+    id: plug_25396_state
+    entity_id: switch.indoor_plug_25396
+    internal: true
+    on_value:
+      - script.execute: plugs_refresh
+
+  - platform: homeassistant
+    id: plug_25905_state
+    entity_id: switch.indoor_plug_25905
+    internal: true
+    on_value:
+      - script.execute: plugs_refresh
+
+  - platform: homeassistant
+    id: plug_26586_state
+    entity_id: switch.indoor_plug_26586
+    internal: true
+    on_value:
+      - script.execute: plugs_refresh
 
 script:
   - id: house_refresh
@@ -81,3 +121,34 @@ script:
           text: !lambda return msg + "…";
       - delay: 20s
       - script.execute: house_refresh
+
+  # Plug Lights is on while any indoor plug is on.
+  - id: plugs_refresh
+    then:
+      - lvgl.widget.update:
+          id: house_plugs
+          state:
+            checked: !lambda |-
+              for (auto *p : {id(plug_07730_state), id(plug_25396_state), id(plug_25905_state), id(plug_26586_state)})
+                if (p->state == "on") return true;
+              return false;
+
+  # Any on turns them all off; all off turns them all on. Flip the button
+  # at once; the plugs' states follow.
+  - id: plug_lights_toggle
+    then:
+      - if:
+          condition:
+            lambda: return lv_obj_has_state(id(house_plugs), LV_STATE_CHECKED);
+          then:
+            - lvgl.widget.update: {id: house_plugs, state: {checked: false}}
+            - homeassistant.action:
+                action: switch.turn_off
+                data:
+                  entity_id: switch.indoor_plug_07730, switch.indoor_plug_25396, switch.indoor_plug_25905, switch.indoor_plug_26586
+          else:
+            - lvgl.widget.update: {id: house_plugs, state: {checked: true}}
+            - homeassistant.action:
+                action: switch.turn_on
+                data:
+                  entity_id: switch.indoor_plug_07730, switch.indoor_plug_25396, switch.indoor_plug_25905, switch.indoor_plug_26586
